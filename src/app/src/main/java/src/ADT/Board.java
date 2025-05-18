@@ -501,6 +501,21 @@ public class Board {
     }
 
     /**
+     * Get Primary Car
+     * 
+     * @return Primary Car
+     */
+    public Car getPrimaryCar() 
+    {
+        for (Car car : this.getCars()) 
+        {
+            if (car.isPrimary()) 
+                return car;
+        }
+        return null; 
+    }
+
+    /**
      * Generates a palette of colors for the cars.
      *
      * @return Array of ANSI color codes
