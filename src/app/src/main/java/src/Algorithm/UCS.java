@@ -34,7 +34,7 @@ public class UCS {
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
-            if(curBoard.isSolved()) return curMoves;
+            if(curBoard.isSolved()) return splitMovesToSteps(curMoves);
 
             String curBoardStr = State.getBoardStateString(curBoard);
             if(visitedStates.contains(curBoardStr)) continue;
@@ -88,5 +88,30 @@ public class UCS {
             System.out.println("Move piece " + resultBoard.getCars().get(pieceIndex).getId() + " by " + moveAmount);
             System.out.println(resultBoard.toString());
         }
+    }
+
+    public static List<int[]> splitMovesToSteps(List<int[]> moves) {
+        List<int[]> steppedMoves = new ArrayList<>();
+        
+        for (int[] move : moves) {
+            int pieceIndex = move[0];
+            int moveAmount = move[1];
+            
+            // Split the move into individual steps of size 1
+            if (moveAmount > 0) {
+                // Positive movement: add moveAmount number of [pieceIndex, 1] moves
+                for (int i = 0; i < moveAmount; i++) {
+                    steppedMoves.add(new int[]{pieceIndex, 1});
+                }
+            } else if (moveAmount < 0) {
+                // Negative movement: add |moveAmount| number of [pieceIndex, -1] moves
+                for (int i = 0; i < Math.abs(moveAmount); i++) {
+                    steppedMoves.add(new int[]{pieceIndex, -1});
+                }
+            }
+            // If moveAmount is 0, we don't add anything (no movement)
+        }
+        
+        return steppedMoves;
     }
 }
