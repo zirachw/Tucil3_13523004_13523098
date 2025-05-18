@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import src.ADT.Board;
 import src.Algorithm.AStar;
+import src.Algorithm.GBFS;
 import src.Algorithm.UCS;
 import src.IO.Input;
 import src.IO.Output;
@@ -115,25 +116,30 @@ public class CLI {
                 System.out.println("Choose an algorithm:");
                 System.out.println("1. A* Algorithm");
                 System.out.println("2. Uniform Cost Search (UCS)");
+                System.out.println("3. Greedy Best First Search (GBFS)");
                 System.out.println();
                 System.out.print("Enter your choice (1 or 2): ");
                 String algoChoice = scanner.nextLine().trim();
-                if (!algoChoice.equals("1") && !algoChoice.equals("2")) {
+                if (!algoChoice.equals("1") && !algoChoice.equals("2") && !algoChoice.equals("3")) {
                     System.out.println("Invalid choice. Exiting program.");
                     scanner.close();
                     return;
                 }
                 if (algoChoice.equals("2")) {
                     System.out.println("✓ Using Uniform Cost Search (UCS)");
-
                     boolean useBlockingHeuristic = getHeuristicChoice(scanner);
                     // Solve the puzzle using UCS algorithm
                     solvePuzzle(board, useBlockingHeuristic, "UCS");
-                } else {
+                } else if (algoChoice.equals("1")) {
                     System.out.println("✓ Using A* Algorithm");
                     boolean useBlockingHeuristic = getHeuristicChoice(scanner);
                     // Solve the puzzle using A* algorithm
                     solvePuzzle(board, useBlockingHeuristic,"A*");
+                }else{
+                    System.out.println("✓ Using Greedy Best First Search (GBFS)");
+                    boolean useBlockingHeuristic = getHeuristicChoice(scanner);
+                    // Solve the puzzle using GBFS algorithm
+                    solvePuzzle(board, useBlockingHeuristic,"GBFS");
                 }
 
                 
@@ -197,7 +203,9 @@ public class CLI {
             List<int[]> moves = ucs.solve();
             ucs.displaySolutions(moves);
         } else {
-            System.out.println("Invalid algorithm choice.");
+            GBFS gbfs = new GBFS(board);
+            List<int[]> moves = gbfs.solve(useBlockingHeuristic ? "blockingCars" : "manhattanDistance");
+            gbfs.displaySolutions(moves);
         }
         
     }
