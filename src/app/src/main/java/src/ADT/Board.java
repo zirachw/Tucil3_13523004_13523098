@@ -288,10 +288,10 @@ public class Board {
             if (car.isPrimary()) 
             {
                 if (car.getOrientation() == HORIZONTAL)
-                    return (car.getStartCol() + car.getLength() == exitCol && car.getStartRow() == exitRow);
+                    return (car.getStartCol() + car.getLength() - 1 == exitCol && car.getStartRow() == exitRow);
                 
                 else
-                    return (car.getStartRow() + car.getLength() == exitRow && car.getStartCol() == exitCol);
+                    return (car.getStartRow() + car.getLength() - 1 == exitRow && car.getStartCol() == exitCol);
             }
         }
         return false;
@@ -438,21 +438,10 @@ public class Board {
     public String toString() 
     {
         StringBuilder sb = new StringBuilder();
-        
-        // Create a temporary grid with exit marked
-        char[][] tempGrid = new char[this.getRows()][this.getCols()];
-        for (int i = 0; i < this.getRows(); i++)
-            System.arraycopy(grid[i], 0, tempGrid[i], 0, this.getCols());
-        
-        // Mark the exit
-        if (exitRow >= 0 && exitRow < this.getRows() && exitCol >= 0 && exitCol < this.getCols())
-            tempGrid[exitRow][exitCol] = 'K';
-        
-        // Convert grid to string
         for (int i = 0; i < this.getRows(); i++) 
         {
             for (int j = 0; j < this.getCols(); j++)
-                sb.append(tempGrid[i][j]);
+                sb.append(grid[i][j]);
 
             if (i < this.getRows() - 1)
                 sb.append("\n");

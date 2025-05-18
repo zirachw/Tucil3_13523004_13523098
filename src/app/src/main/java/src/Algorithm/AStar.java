@@ -14,8 +14,8 @@ public class AStar {
     }
 
     public List<int[]> solve(String heuristic){
-        if(heuristic.equals("blockingPieces")){
-            return solveBlockingPieces();
+        if(heuristic.equals("blockingCars")){
+            return solveBlockingCars();
         } else if(heuristic.equals("manhattanDistance")){
             return solveManhattanDistance();
         } else {
@@ -23,7 +23,7 @@ public class AStar {
         }
     }
 
-    private List<int[]> solveBlockingPieces() {
+    private List<int[]> solveBlockingCars() {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getFValue()));
 
         List<int[]> initialMoves = new ArrayList<>();
