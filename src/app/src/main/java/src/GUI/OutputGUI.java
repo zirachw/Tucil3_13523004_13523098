@@ -45,13 +45,13 @@ public class OutputGUI
 
         java.io.FileWriter writer = new java.io.FileWriter(txtFile);
         
-        if (board.getP() == 0) writer.write(board.getType());
+        if (board.hasError()) writer.write(board.getErrorMsg());
         else 
         {
             writer.write("Solution:\n");
-            for (int i = 0; i < board.getHeight(); i++) 
+            for (int i = 0; i < board.getRows(); i++) 
             {
-                for (int j = 0; j < board.getWidth(); j++) 
+                for (int j = 0; j < board.getCols(); j++) 
                 {
                     writer.write(board.getElement(i, j));
                 }
@@ -72,8 +72,8 @@ public class OutputGUI
      */
     public void saveToImage() throws IOException 
     {
-        PuzzleImage image = new PuzzleImage(board);
-        image.saveToImage(fileName);
+        // PuzzleImage image = new PuzzleImage(board);
+        // image.saveToImage(fileName);
     }
 
     /**

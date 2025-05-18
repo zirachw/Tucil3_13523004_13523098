@@ -25,8 +25,8 @@ public class PuzzleImage extends JPanel
     public PuzzleImage(Board board) 
     {
         this.board = board;
-        int width = board.getWidth() * CELL_SIZE;
-        int height = board.getHeight() * CELL_SIZE;
+        int width = board.getCols() * CELL_SIZE;
+        int height = board.getRows() * CELL_SIZE;
         setPreferredSize(new Dimension(width, height));
         setBackground(Color.BLACK);
     }
@@ -43,9 +43,9 @@ public class PuzzleImage extends JPanel
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         // First pass: Draw all base circles
-        for (int i = 0; i < board.getHeight(); i++) 
+        for (int i = 0; i < board.getRows(); i++) 
         {
-            for (int j = 0; j < board.getWidth(); j++) 
+            for (int j = 0; j < board.getCols(); j++) 
             {
                 char cell = board.getElement(i, j);
                 drawBaseCell(g2d, i, j, cell);
@@ -53,9 +53,9 @@ public class PuzzleImage extends JPanel
         }
         
         // Second pass: Draw connecting joints
-        for (int i = 0; i < board.getHeight(); i++) 
+        for (int i = 0; i < board.getRows(); i++) 
         {
-            for (int j = 0; j < board.getWidth(); j++) 
+            for (int j = 0; j < board.getCols(); j++) 
             {
                 char cell = board.getElement(i, j);
                 if (cell != ' ') 
@@ -66,9 +66,9 @@ public class PuzzleImage extends JPanel
         }
         
         // Third pass: Draw letters
-        for (int i = 0; i < board.getHeight(); i++) 
+        for (int i = 0; i < board.getRows(); i++) 
         {
-            for (int j = 0; j < board.getWidth(); j++) 
+            for (int j = 0; j < board.getCols(); j++) 
             {
                 char cell = board.getElement(i, j);
                 if (cell != ' ') 
@@ -108,11 +108,11 @@ public class PuzzleImage extends JPanel
     {
         int x = col * CELL_SIZE;
         int y = row * CELL_SIZE;
-        Color pieceColor = getColorForLetter(letter);
-        g2d.setColor(pieceColor);
+        Color carColor = getColorForLetter(letter);
+        g2d.setColor(carColor);
         
         // Check and draw horizontal joints
-        if (col < board.getWidth() - 1 && board.getElement(row, col + 1) == letter) 
+        if (col < board.getCols() - 1 && board.getElement(row, col + 1) == letter) 
         {
             // Draw horizontal joint
             Rectangle2D.Double horizontalJoint = new Rectangle2D.Double(
@@ -125,7 +125,7 @@ public class PuzzleImage extends JPanel
         }
         
         // Check and draw vertical joints
-        if (row < board.getHeight() - 1 && board.getElement(row + 1, col) == letter) 
+        if (row < board.getRows() - 1 && board.getElement(row + 1, col) == letter) 
         {
             // Draw vertical joint
             Rectangle2D.Double verticalJoint = new Rectangle2D.Double(
@@ -184,8 +184,8 @@ public class PuzzleImage extends JPanel
      */
     public void saveToImage(String filename)
     {
-        int width = board.getWidth() * CELL_SIZE;
-        int height = board.getHeight() * CELL_SIZE;
+        int width = board.getCols() * CELL_SIZE;
+        int height = board.getRows() * CELL_SIZE;
         
         java.awt.image.BufferedImage bi = new java.awt.image.BufferedImage(
             width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB

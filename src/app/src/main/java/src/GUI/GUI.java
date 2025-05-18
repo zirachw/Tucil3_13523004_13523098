@@ -394,7 +394,7 @@ public class GUI extends Application
         saveTxtButton.setDisable(false);
         savePngButton.setDisable(true);
 
-        board = new Board(0, 0, 0, errorMessage, null);
+        board = new Board(0, 0, 0, 0, 0, null);
     }
 
     /**
