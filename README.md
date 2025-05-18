@@ -142,18 +142,29 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
 │            ├── 📂 main
 │            │    └── 📂 java
 │            │          └── 📂 src
+│            │               ├── 📂 ADT
+│            │               │   ├── Board.java
+│            │               │   └── Car.java
+│            │               │   └── State.java
+│            │               │
+│            │               ├── 📂 Algorithm
+│            │               │   ├── AStar.java
+│            │               │   ├── GBFS.java
+│            │               │   └── UCS.java
+│            │               │
+│            │               ├── 📂 CLI
+│            │               │   ├── CLI.java
+│            │               │
 │            │               ├── 📂 GUI
 │            │               │   ├── GUI.java
-│            │               │   └── OutputGUI.java
+│            │               │   ├── OutputGUI.java
+│            │               │   └── PuzzleImage.java
 │            │               │
-│            │               ├── Board.java
-│            │               ├── Bruteforce.java
-│            │               ├── CLI.java
-│            │               ├── Input.java
-│            │               ├── Main.java
-│            │               ├── Output.java
-│            │               ├── Piece.java
-│            │               └── PuzzleImage.java
+│            │               ├── 📂 IO
+│            │               │   ├── Input.java
+│            │               │   └── Output.java
+│            │               │
+│            │               └── Main.java
 │            │
 │            └── build.gradle.kts     # build setups
 │                       
