@@ -50,14 +50,14 @@ public class Output
             System.out.println();
             if (save.equalsIgnoreCase("Y")) 
             {
-                if (board.getType() == "Filename cannot be empty.")
+                if (board.getErrorMsg() == "Filename cannot be empty.")
                 {
                     Output output = new Output("invalid-file-1", board, 0, 0);
                     output.saveToTextCLI();
                     valid = true;
                 }
                 // Use regex to check if board.getType() contains "does not exist in the ~/test directory."
-                else if (board.getType().matches(".*does not exist in the ~/test directory.*"))
+                else if (board.getErrorMsg().matches(".*does not exist in the ~/test directory.*"))
                 {
                     Output output = new Output("invalid-file-2", board, 0, 0);
                     output.saveToTextCLI();
@@ -141,7 +141,7 @@ public class Output
                 }
                 else
                 {
-                    System.out.println("\n[!] Invalid input. Please enter 1 to 4.");
+                    System.out.println("\n[!] Invalid input. Please enter 1.");
                 }
             }
             else
@@ -232,18 +232,18 @@ public class Output
         {
             java.io.FileWriter writer = new java.io.FileWriter(txtPath);
 
-            if (board.getP() == 0)
+            if (board.hasError())
             {
-                writer.write(getBoard().getType());
+                writer.write(getBoard().getErrorMsg());
                 writer.close();
                 return;
             }
             else
             {
                 writer.write("Solution:\n");
-                for (int i = 0; i < getBoard().getHeight(); i++)
+                for (int i = 0; i < getBoard().getRows(); i++)
                 {
-                    for (int j = 0; j < getBoard().getWidth(); j++)
+                    for (int j = 0; j < getBoard().getCols(); j++)
                     {
                         writer.write(getBoard().getElement(i, j));
                     }
