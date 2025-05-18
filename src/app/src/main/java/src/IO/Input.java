@@ -14,7 +14,7 @@ public class Input
 {
     private int A;                         // Number of rows in the board
     private int B;                         // Number of columns in the board
-    private int N;                         // Number of pieces on the board
+    private int N;                         // Number of cars on the board
     private int exitRow;                   // Row of the exit
     private int exitCol;                   // Column of the exit
     private String exitSide;               // Side of the exit (LEFT, RIGHT, TOP, BOTTOM)
@@ -43,16 +43,16 @@ public class Input
      *
      * @param rows number of rows of the board (A)
      * @param cols number of columns of the board (B)
-     * @param pieces number of pieces excluding the primary piece (N)
+     * @param cars number of cars excluding the primary car (N)
      * @param boardConfig list of strings representing the board configuration
      * @param errorMsg error message if any
      * @param exitPosition position of the exit
      */
-    public Input(int rows, int cols, int pieces, ArrayList<String> boardConfig, ExitPosition exitPosition, String errorMsg) 
+    public Input(int rows, int cols, int cars, ArrayList<String> boardConfig, ExitPosition exitPosition, String errorMsg) 
     {
         this.A = rows;
         this.B = cols;
-        this.N = pieces;
+        this.N = cars;
         this.exitRow = exitPosition.row;
         this.exitCol = exitPosition.col;
         this.exitSide = exitPosition.side;
@@ -73,10 +73,10 @@ public class Input
     public int getCols() { return this.B; }
     
     /**
-     * Get the number of non-primary pieces in the puzzle.
-     * @return Number of non-primary pieces
+     * Get the number of non-primary cars in the puzzle.
+     * @return Number of non-primary cars
      */
-    public int getNumPieces() { return this.N; }
+    public int getNumCars() { return this.N; }
     
     /**
      * Get the row of the exit position.
@@ -191,7 +191,7 @@ public class Input
     }
     
     /**
-     * Validates the second line containing number of pieces (N).
+     * Validates the second line containing number of cars (N).
      * 
      * @param line Second line of the input file
      * @return SecondLine record containing validated values or error message
@@ -201,7 +201,7 @@ public class Input
         String[] tokens = line.split("\\s+");
         if (tokens.length != 1) 
         {
-            this.errorMsg = "Second line must contain exactly one value: N (number of non-primary pieces). Found: " + line;
+            this.errorMsg = "Second line must contain exactly one value: N (number of non-primary cars). Found: " + line;
             return;
         }
 
@@ -214,15 +214,15 @@ public class Input
             }
         }
 
-        int pieces = Integer.parseInt(tokens[0]);
+        int cars = Integer.parseInt(tokens[0]);
 
-        if (pieces < 0) 
+        if (cars < 0) 
         {
-            this.errorMsg = "N must be a non-negative integer. Found N = " + pieces + ".";
+            this.errorMsg = "N must be a non-negative integer. Found N = " + cars + ".";
             return;
         }
         
-        this.N = pieces;
+        this.N = cars;
     }
     
     /**
@@ -283,7 +283,7 @@ public class Input
             return;
         }
         
-        boolean foundPrimaryPiece = false;
+        boolean foundPrimaryCar = false;
         boolean foundLeftSpace    = false;
         boolean hasLeftExit       = false;
         
@@ -357,15 +357,15 @@ public class Input
             for (int j = 0; j < line.length(); j++) 
             {
                 char c = line.charAt(j);
-                if (c == 'P') foundPrimaryPiece = true;
+                if (c == 'P') foundPrimaryCar = true;
             }
 
             this.boardConfig.set(i, line);
         }
         
-        if (!foundPrimaryPiece) 
+        if (!foundPrimaryCar) 
         {
-            this.errorMsg = "Primary piece (P) not found in board configuration.";
+            this.errorMsg = "Primary car (P) not found in board configuration.";
             return;
         }
         
@@ -394,7 +394,7 @@ public class Input
      *
      * Expected file format:
      *   A B      // Board dimensions (rows x columns)
-     *   N        // Number of non-primary pieces
+     *   N        // Number of non-primary cars
      *   [Board configuration] - may include rows with exit 'K' outside the board
      *
      * @param filePath path to the puzzle specification file
@@ -429,7 +429,7 @@ public class Input
                 else if (length < 2) 
                 {
                     br.close();
-                    this.errorMsg = "No number of non-primary pieces found in the file.";
+                    this.errorMsg = "No number of non-primary cars found in the file.";
                     return;
                 }
                 else continue;

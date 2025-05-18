@@ -18,30 +18,30 @@ public class Board {
     // Attributes
     private int A;               // Number of rows in the board
     private int B;               // Number of columns in the board
-    private int N;               // Number of pieces on the board
+    private int N;               // Number of cars on the board
     private int exitRow;         // Exit row position
     private int exitCol;         // Exit column position
     private char[][] grid;       // The game grid
-    private List<Piece> pieces;  // All pieces on the board
+    private List<Car> cars;      // All cars on the board
     private String errorMsg;     // Error message for invalid configurations
-    private String[] palette;    // Color palette for pieces
+    private String[] palette;    // Color palette for cars
     
     /**
      * Constructor for the Board class
      * @param rows Number of rows in the board
      * @param cols Number of columns in the board
-     * @param numPieces Number of pieces on the board
+     * @param numCars Number of cars on the board
      * @param exitRow Row position of the exit
      * @param exitCol Column position of the exit
      */
-    public Board(int rows, int cols, int numPieces, int exitRow, int exitCol, String errorMsg) {
+    public Board(int rows, int cols, int numCars, int exitRow, int exitCol, String errorMsg) {
         this.A        = rows;
         this.B        = cols;
-        this.N        = numPieces;
+        this.N        = numCars;
         this.exitRow  = exitRow;
         this.exitCol  = exitCol;
         this.grid     = new char[rows][cols];
-        this.pieces   = new ArrayList<>();
+        this.cars   = new ArrayList<>();
         this.errorMsg = errorMsg;
         this.palette  = generatePalette();
         
@@ -66,10 +66,10 @@ public class Board {
     public int getCols() { return this.B; }
 
     /**
-     * Get the number of pieces on the board
+     * Get the number of cars on the board
      * @return
      */
-    public int getNumPieces() { return this.N; }
+    public int getNumCars() { return this.N; }
     
     /**
      * Get the grid of the board
@@ -84,10 +84,10 @@ public class Board {
     public char getElement(int i, int j) { return this.grid[i][j]; }
     
     /**
-     * Get the pieces on the board
+     * Get the cars on the board
      * @return
      */
-    public List<Piece> getPieces() { return this.pieces; }
+    public List<Car> getCars() { return this.cars; }
     
     /**
      * Get the exit row position
@@ -114,7 +114,7 @@ public class Board {
     public boolean hasError() { return this.errorMsg != null; }
 
     /** 
-     * Get the color palette for the pieces
+     * Get the color palette for the cars
      * @return
      */
     public String[] getPalette() { return this.palette; }
@@ -128,7 +128,7 @@ public class Board {
     {
         Board newBoard = new Board(this.getRows(), 
                                    this.getCols(), 
-                                   this.getNumPieces(), 
+                                   this.getNumCars(), 
                                    this.getExitRow(), 
                                    this.getExitCol(),
                                    this.getErrorMsg());
@@ -137,11 +137,11 @@ public class Board {
         for (int i = 0; i < this.getRows(); i++) 
             System.arraycopy(this.grid[i], 0, newBoard.grid[i], 0, this.getCols());
         
-        // Copy the pieces
-        for (Piece piece : this.getPieces()) 
+        // Copy the cars
+        for (Car car : this.getCars()) 
         {
-            Piece newPiece = piece.copy();
-            newBoard.pieces.add(newPiece);
+            Car newCar = car.copy();
+            newBoard.cars.add(newCar);
         }
         
         newBoard.exitRow  = this.getExitRow();
@@ -164,8 +164,8 @@ public class Board {
         for (int i = 0; i < this.getRows(); i++) 
             config[i] = boardConfig.get(i).toCharArray();
         
-        // Extract pieces from the grid
-        Map<Character, ArrayList<int[]>> pieceLocations = new HashMap<>();
+        // Extract cars from the grid
+        Map<Character, ArrayList<int[]>> carLocations = new HashMap<>();
         boolean foundPrimary = false;
 
         for (int i = 0; i < this.getRows(); i++) 
@@ -176,59 +176,59 @@ public class Board {
 
                 if (grid[i][j] != '.') 
                 {
-                    // If the piece is not already in the map, add it
-                    if (!pieceLocations.containsKey(grid[i][j]))
+                    // If the car is not already in the map, add it
+                    if (!carLocations.containsKey(grid[i][j]))
                     {
-                        pieceLocations.put(grid[i][j], new ArrayList<int []>());
-                        pieceLocations.get(grid[i][j]).add(new int[]{i, j, UNKNOWN});
+                        carLocations.put(grid[i][j], new ArrayList<int []>());
+                        carLocations.get(grid[i][j]).add(new int[]{i, j, UNKNOWN});
                         
                         if (grid[i][j] == 'P') foundPrimary = true;
                     }
                     else
                     {
-                        int[] firstLocation = pieceLocations.get(grid[i][j]).get(0);
-                        int[] lastLocation = pieceLocations.get(grid[i][j]).get(pieceLocations.get(grid[i][j]).size() - 1);
+                        int[] firstLocation = carLocations.get(grid[i][j]).get(0);
+                        int[] lastLocation = carLocations.get(grid[i][j]).get(carLocations.get(grid[i][j]).size() - 1);
 
-                        if (pieceLocations.get(grid[i][j]).size() == 1) 
+                        if (carLocations.get(grid[i][j]).size() == 1) 
                         {
                             if (firstLocation[0] != i && firstLocation[1] != j)
                             {
-                                this.errorMsg = "Found duplicate piece " + grid[i][j] + " at (" + i + ", " + j + 
+                                this.errorMsg = "Found duplicate car " + grid[i][j] + " at (" + i + ", " + j + 
                                                 ") and (" + firstLocation[0] + ", " + firstLocation[1] + ")";
                                 return;
                             }
                             else if (firstLocation[0] == i && firstLocation[1] == j - 1)
                             {
-                                pieceLocations.get(grid[i][j]).get(0)[2] = HORIZONTAL;
-                                pieceLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
+                                carLocations.get(grid[i][j]).get(0)[2] = HORIZONTAL;
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
                             }
                             else if (firstLocation[0] == i - 1 && firstLocation[1] == j)
                             {
-                                pieceLocations.get(grid[i][j]).get(0)[2] = VERTICAL;
-                                pieceLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
+                                carLocations.get(grid[i][j]).get(0)[2] = VERTICAL;
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
                             }
                         }
                         else
                         {
                             if (firstLocation[0] == i && lastLocation[1] == j - 1 && firstLocation[2] == HORIZONTAL)
                             {
-                                pieceLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
                             }
                             else if (lastLocation[0] == i - 1 && firstLocation[1] == j && lastLocation[2] == VERTICAL)
                             {
-                                pieceLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
                             }
 
                             if (grid[i][j] == 'P')
                             {
                                 if (firstLocation[2] == HORIZONTAL && i != exitRow)
                                 {
-                                    this.errorMsg = "Primary piece is not at the exit row";
+                                    this.errorMsg = "Primary car is not at the exit row";
                                     return;
                                 }
                                 else if (firstLocation[2] == VERTICAL && j != exitCol)
                                 {
-                                    this.errorMsg = "Primary piece is not at the exit column";
+                                    this.errorMsg = "Primary car is not at the exit column";
                                     return;
                                 }
                             }
@@ -238,8 +238,8 @@ public class Board {
             }
         }
         
-        // Process all pieces
-        for (Map.Entry<Character, ArrayList<int[]>> entry : pieceLocations.entrySet()) 
+        // Process all cars
+        for (Map.Entry<Character, ArrayList<int[]>> entry : carLocations.entrySet()) 
         {
             char id = entry.getKey();
             ArrayList<int[]> locations = entry.getValue();
@@ -252,71 +252,71 @@ public class Board {
             int startRow = locations.get(0)[0];
             int startCol = locations.get(0)[1];
             
-            // Create the piece
-            Piece piece = new Piece(id, startRow, startCol, size, isPrimary, orientation);
-            this.pieces.add(piece);
+            // Create the car
+            Car car = new Car(id, startRow, startCol, size, isPrimary, orientation);
+            this.cars.add(car);
         }
 
         if (!foundPrimary) 
         {
-            this.errorMsg = "No primary piece found on the board";
+            this.errorMsg = "No primary car found on the board";
             return;
         }
         
-        if (pieceLocations.size() < this.getNumPieces())
+        if (carLocations.size() < this.getNumCars())
         {
-            this.errorMsg = "There are too few pieces. Expected " + N + " but found " + pieceLocations.size();
+            this.errorMsg = "There are too few cars. Expected " + N + " but found " + carLocations.size();
             return;
         }
 
-        if (pieceLocations.size() > this.getNumPieces())
+        if (carLocations.size() > this.getNumCars())
         {
-            this.errorMsg = "There are too many pieces. Expected " + N + " but found " + pieceLocations.size();
+            this.errorMsg = "There are too many cars. Expected " + N + " but found " + carLocations.size();
             return;
         }
     }
     
     /**
-     * Check if the board is in a solved state (primary piece at exit)
+     * Check if the board is in a solved state (primary car at exit)
      * 
      * @return True if solved, false otherwise
      */
     public boolean isSolved() 
     {
-        for (Piece piece : this.getPieces()) 
+        for (Car car : this.getCars()) 
         {
-            if (piece.isPrimary()) 
+            if (car.isPrimary()) 
             {
-                if (piece.getOrientation() == HORIZONTAL)
-                    return (piece.getStartCol() + piece.getLength() == exitCol && piece.getStartRow() == exitRow);
+                if (car.getOrientation() == HORIZONTAL)
+                    return (car.getStartCol() + car.getLength() == exitCol && car.getStartRow() == exitRow);
                 
                 else
-                    return (piece.getStartRow() + piece.getLength() == exitRow && piece.getStartCol() == exitCol);
+                    return (car.getStartRow() + car.getLength() == exitRow && car.getStartCol() == exitCol);
             }
         }
         return false;
     }
     
     /**
-     * Get all valid moves for a specific piece
+     * Get all valid moves for a specific car
      * 
-     * @param pieceIndex Index of the piece in the pieces list
+     * @param carIndex Index of the car in the cars list
      * @return List of valid move amounts (positive for right/down, negative for left/up)
      */
-    public List<Integer> getValidMoves(int pieceIndex) 
+    public List<Integer> getValidMoves(int carIndex) 
     {
-        Piece piece = pieces.get(pieceIndex);
+        Car car = cars.get(carIndex);
         List<Integer> validMoves = new ArrayList<>();
         
-        if (piece.getOrientation() == HORIZONTAL) 
+        if (car.getOrientation() == HORIZONTAL) 
         {
             // Check moves to the left
-            int leftMost = piece.getStartCol();
+            int leftMost = car.getStartCol();
             int leftBound = 0;
             
             for (int col = leftMost - 1; col >= 0; col--) 
             {
-                if (isOccupied(piece.getStartRow(), col)) 
+                if (isOccupied(car.getStartRow(), col)) 
                 {
                     leftBound = col + 1;
                     break;
@@ -328,12 +328,12 @@ public class Board {
                 validMoves.add(col - leftMost); // This will be negative (left)
             
             // Check moves to the right
-            int rightMost = piece.getStartCol() + piece.getLength() - 1;
+            int rightMost = car.getStartCol() + car.getLength() - 1;
             int rightBound = this.getCols() - 1;
             
             for (int col = rightMost + 1; col < this.getCols(); col++) 
             {
-                if (isOccupied(piece.getStartRow(), col)) 
+                if (isOccupied(car.getStartRow(), col)) 
                 {
                     rightBound = col - 1;
                     break;
@@ -348,12 +348,12 @@ public class Board {
         else 
         {
             // Check moves up
-            int topMost = piece.getStartRow();
+            int topMost = car.getStartRow();
             int topBound = 0;
             
             for (int row = topMost - 1; row >= 0; row--) 
             {
-                if (isOccupied(row, piece.getStartCol())) 
+                if (isOccupied(row, car.getStartCol())) 
                 {
                     topBound = row + 1;
                     break;
@@ -365,12 +365,12 @@ public class Board {
                 validMoves.add(row - topMost); // This will be negative (up)
             
             // Check moves down
-            int bottomMost = piece.getStartRow() + piece.getLength() - 1;
+            int bottomMost = car.getStartRow() + car.getLength() - 1;
             int bottomBound = this.getRows() - 1;
             
             for (int row = bottomMost + 1; row < this.getRows(); row++) 
             {
-                if (isOccupied(row, piece.getStartCol())) 
+                if (isOccupied(row, car.getStartCol())) 
                 {
                     bottomBound = row - 1;
                     break;
@@ -386,7 +386,7 @@ public class Board {
     }
     
     /**
-     * Check if a cell is occupied by any piece
+     * Check if a cell is occupied by any car
      * 
      * @param row Row index
      * @param col Column index
@@ -402,29 +402,29 @@ public class Board {
     }
     
     /**
-     * Apply a move to a piece
+     * Apply a move to a car
      * 
-     * @param pieceIndex Index of the piece in the pieces list
+     * @param carIndex Index of the car in the cars list
      * @param move Amount to move (positive for right/down, negative for left/up)
      * @return A new Board with the move applied
      */
-    public Board applyMove(int pieceIndex, int move) 
+    public Board applyMove(int carIndex, int move) 
     {
         Board newBoard = this.copy();
-        Piece piece = newBoard.pieces.get(pieceIndex);
+        Car car = newBoard.cars.get(carIndex);
         
-        // Clear the current piece position
-        int[][] oldCells = piece.getOccupiedCells();
+        // Clear the current car position
+        int[][] oldCells = car.getOccupiedCells();
         for (int[] cell : oldCells)
             newBoard.grid[cell[0]][cell[1]] = '.';
         
-        // Move the piece
-        piece.move(move);
+        // Move the car
+        car.move(move);
         
-        // Update the grid with the new piece position
-        int[][] newCells = piece.getOccupiedCells();
+        // Update the grid with the new car position
+        int[][] newCells = car.getOccupiedCells();
         for (int[] cell : newCells)
-            newBoard.grid[cell[0]][cell[1]] = piece.getId();
+            newBoard.grid[cell[0]][cell[1]] = car.getId();
         
         return newBoard;
     }
@@ -462,9 +462,9 @@ public class Board {
     }
 
     /**
-     * Get a string representation of the pieces on the board
+     * Get a string representation of the cars on the board
      * 
-     * @return String representation of the pieces
+     * @return String representation of the cars
      */
     @Override
     public int hashCode() 
@@ -501,7 +501,7 @@ public class Board {
     }
 
     /**
-     * Generates a palette of colors for the pieces.
+     * Generates a palette of colors for the cars.
      *
      * @return Array of ANSI color codes
      */
