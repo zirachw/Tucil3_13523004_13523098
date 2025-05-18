@@ -265,13 +265,13 @@ public class Board {
         
         if (carLocations.size() - 1 < this.getNumCars())
         {
-            this.errorMsg = "There are too few cars. Expected " + N + " but found " + carLocations.size();
+            this.errorMsg = "There are too few cars. Expected " + N + " but found " + (carLocations.size() - 1);
             return;
         }
 
         if (carLocations.size() - 1 > this.getNumCars())
         {
-            this.errorMsg = "There are too many cars. Expected " + N + " but found " + carLocations.size();
+            this.errorMsg = "There are too many cars. Expected " + N + " but found " + (carLocations.size() - 1);
             return;
         }
     }

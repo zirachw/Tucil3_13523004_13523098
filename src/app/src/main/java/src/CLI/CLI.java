@@ -109,41 +109,37 @@ public class CLI {
                 System.out.println("[#] Puzzle configuration:");
                 // System.out.println(board);
                 displayBoardInfo(board, input);
-
-                 System.out.println("\n" + "=".repeat(40));
-                System.out.println("ALGORITHM SELECTION");
-                System.out.println("=".repeat(40));
-                System.out.println("Choose an algorithm:");
-                System.out.println("1. A* Algorithm");
-                System.out.println("2. Uniform Cost Search (UCS)");
-                System.out.println("3. Greedy Best First Search (GBFS)");
-                System.out.println();
-                System.out.print("Enter your choice (1 or 2): ");
-                String algoChoice = scanner.nextLine().trim();
-                if (!algoChoice.equals("1") && !algoChoice.equals("2") && !algoChoice.equals("3")) {
-                    System.out.println("Invalid choice. Exiting program.");
-                    scanner.close();
-                    return;
-                }
-                if (algoChoice.equals("2")) {
-                    System.out.println("✓ Using Uniform Cost Search (UCS)");
-                    boolean useBlockingHeuristic = getHeuristicChoice(scanner);
-                    // Solve the puzzle using UCS algorithm
-                    solvePuzzle(board, useBlockingHeuristic, "UCS");
-                } else if (algoChoice.equals("1")) {
-                    System.out.println("✓ Using A* Algorithm");
-                    boolean useBlockingHeuristic = getHeuristicChoice(scanner);
-                    // Solve the puzzle using A* algorithm
-                    solvePuzzle(board, useBlockingHeuristic,"A*");
-                }else{
-                    System.out.println("✓ Using Greedy Best First Search (GBFS)");
-                    boolean useBlockingHeuristic = getHeuristicChoice(scanner);
-                    // Solve the puzzle using GBFS algorithm
-                    solvePuzzle(board, useBlockingHeuristic,"GBFS");
-                }
-
                 
+                String algo = validateOption(scanner, 3);
+                String heuristic;
+                List<int[]> moves;
 
+                switch (algo) 
+                {
+                    case "A*":
+                        heuristic = validateOption(scanner, 2);
+                        AStar aStar = new AStar(board);
+                        moves = aStar.solve(heuristic);
+                        aStar.displaySolutions(moves);
+                        break;
+
+                    case "GBFS":
+                        heuristic = validateOption(scanner, 2);
+                        GBFS gbfs = new GBFS(board);
+                        moves = gbfs.solve(heuristic);
+                        gbfs.displaySolutions(moves);
+                        break;
+
+                    case "UCS":
+                        UCS ucs = new UCS(board);
+                        moves = ucs.solve();
+                        ucs.displaySolutions(moves);
+                        break;
+                }
+
+                scanner.close();
+                System.out.println("Done!");
+                System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
             }
         } 
         catch (IOException e) 
@@ -153,61 +149,95 @@ public class CLI {
             return;
         }
     }
-    private static boolean getHeuristicChoice(Scanner scanner) {
-        System.out.println("\n" + "=".repeat(40));
-        System.out.println("HEURISTIC SELECTION");
-        System.out.println("=".repeat(40));
-        System.out.println("Choose a heuristic function:");
-        System.out.println("1. Manhattan Distance Heuristic");
-        System.out.println("2. Blocking Cars Heuristic");
-        System.out.println();
-        
-        while (true) {
-            System.out.print("Enter your choice (1 or 2): ");
-            String choice = scanner.nextLine().trim();
-            
-            if (choice.equals("1")) {
-                System.out.println("✓ Using Manhattan Distance Heuristic");
-                return false;
-            } else if (choice.equals("2")) {
-                System.out.println("✓ Using Blocking Cars Heuristic");
-                return true;
-            } else {
-                System.out.println("Invalid choice. Please enter 1 or 2.");
-            }
-        }
-    }
 
-    /**
-     * Solves the puzzle using A* algorithm
-     * 
-     * @param board The initial board state
-     * @param useBlockingHeuristic Whether to use blocking Cars heuristic
-     */
-    private static void solvePuzzle(Board board, boolean useBlockingHeuristic, String algo) {
-        System.out.println("\n" + "=".repeat(50));
-        System.out.println("SOLVING PUZZLE");
-        System.out.println("=".repeat(50));
-        String curHeu;
-        if(algo.equals("A*")) {
-            if(useBlockingHeuristic){
-                curHeu = "blockingCars";
-            } else {
-                curHeu = "manhattanDistance";
-            }
-            AStar aStar = new AStar(board);
-            List<int[]> moves = aStar.solve(curHeu);
-            aStar.displaySolutions(moves);
-        } else if(algo.equals("UCS")) {
-            UCS ucs = new UCS(board);
-            List<int[]> moves = ucs.solve();
-            ucs.displaySolutions(moves);
-        } else {
-            GBFS gbfs = new GBFS(board);
-            List<int[]> moves = gbfs.solve(useBlockingHeuristic ? "blockingCars" : "manhattanDistance");
-            gbfs.displaySolutions(moves);
-        }
+    public static String validateOption(Scanner scanner, int numOptions)
+    {
+        boolean valid = false;
+        String algo = null;
+        int option = -1;
         
+        while (!valid) 
+        {
+            if (numOptions == 3)
+            {
+                System.out.println("[#] Algorithm selection:");
+                System.out.println();
+                System.out.println("[-] 1. A* Algorithm");
+                System.out.println("[-] 2. Greedy Best First Search (GBFS)");
+                System.out.println("[-] 3. Uniform Cost Search (UCS)");
+                System.out.println();
+                System.out.println("[?] Enter your choice (1, 2, or 3)");
+            }
+            else
+            {
+                System.out.println("[#] Heuristic selection:");
+                System.out.println();
+                System.out.println("[-] 1. Manhattan Distance Heuristic");
+                System.out.println("[-] 2. Blocking Cars Heuristic");
+                System.out.println();   
+                System.out.println("[?] Enter your choice (1 or 2)");
+            }
+            
+            System.out.println();
+            String line = scanner.nextLine();
+            System.out.println();
+
+            String[] tokens = line.split("\\s+");
+            if (tokens.length != 1) 
+            {
+                System.out.println("[!] Invalid input. Please enter a single integer, example \"1\".");
+                System.out.println();
+                continue;
+            }
+
+            if (!tokens[0].matches("\\d+")) 
+            {
+                System.out.println("Invalid input. Please enter a non-negative integer.");
+                System.out.println();
+                continue;
+            }
+
+            option = Integer.parseInt(tokens[0]);
+
+            if (option < 1 || option > numOptions) 
+            {
+                System.out.println("Invalid input. Please enter \"1\" to \"" + numOptions + "\".");
+                System.out.println();
+                continue;
+            }
+            else
+            {
+                valid = true;
+                if (numOptions == 3)
+                {
+                    switch (option) 
+                    {
+                        case 1:
+                            algo = "A*";
+                            break;
+                        case 2:
+                            algo = "GBFS";
+                            break;
+                        case 3:
+                            algo = "UCS";
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (option) 
+                    {
+                        case 1:
+                            algo = "Manhattan";
+                            break;
+                        case 2:
+                            algo = "Blocking";
+                            break;
+                    }   
+                }
+            }
+        }
+        return algo;
     }
     
     /**

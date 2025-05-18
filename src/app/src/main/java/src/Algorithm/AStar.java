@@ -1,4 +1,5 @@
 package src.Algorithm;
+
 import src.ADT.*;
 import java.util.*;
 
@@ -7,25 +8,23 @@ public class AStar {
     private Set<String> visitedStates;
     private int nodesExplored;
     
-    public AStar(Board board) {
+    public AStar(Board board) 
+    {
         this.initialBoard = board;
         this.visitedStates = new HashSet<>();
         this.nodesExplored = 0;
     }
 
-    public List<int[]> solve(String heuristic){
-        if(heuristic.equals("blockingCars")){
-            return solveBlockingCars();
-        } else if(heuristic.equals("manhattanDistance")){
-            return solveManhattanDistance();
-        } else {
-            throw new IllegalArgumentException("Invalid heuristic: " + heuristic);
-        }
+    public List<int[]> solve(String heuristic)
+    {
+        if(heuristic.equals("Blocking")) return solveBlockingCars();
+        else if(heuristic.equals("Manhattan")) return solveManhattanDistance();
+        else throw new IllegalArgumentException("Invalid heuristic: " + heuristic);
     }
 
-    private List<int[]> solveBlockingCars() {
+    private List<int[]> solveBlockingCars() 
+    {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getFValue()));
-
         List<int[]> initialMoves = new ArrayList<>();
         
         int intialHValue = State.calculateBlockingCarHeuristic(initialBoard);
@@ -53,7 +52,8 @@ public class AStar {
             }
             
             List<Car> pieces = curBoard.getCars();
-            for(int i = 0; i < pieces.size(); i++){
+            for(int i = 0; i < pieces.size(); i++)
+            {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
@@ -134,13 +134,16 @@ public class AStar {
             System.out.println("No solution found.");
             return;
         }
+
         System.out.println("Solution found with " + nodesExplored + " nodes explored:");
         System.out.println("Intial board state:");
         Board firstBoard = initialBoard;
         System.out.println(firstBoard.toString());
         System.out.println("Result:");
         Board resultBoard = initialBoard;
-        for(int[] move : moves) {
+
+        for(int[] move : moves) 
+        {
             int pieceIndex = move[0];
             int moveAmount = move[1];
             resultBoard = resultBoard.applyMove(pieceIndex, moveAmount);
