@@ -1,4 +1,3 @@
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,7 +15,7 @@ public class InputUsageExample {
      */
     public static void main(String[] args) {
         // Example file path - adjust as needed
-        String filePath = "D:\\Kuliah\\Akademik\\Semester 4\\Algorithm_Strategy\\Tucil3\\Testing\\puzzle4.txt";
+        String filePath = "D:\\Akademik\\ITB\\Semester-4\\Stima\\Tucil\\Tucil3_13523004_13523098\\dev\\puzzle4.txt";
         
         // Step 1: Validate the filename
         String filenameError = Input.validateFilename(filePath);
@@ -45,6 +44,12 @@ public class InputUsageExample {
             
             // Step 5: Successfully parsed the input, can now use it
             System.out.println("Puzzle loaded successfully!");
+
+            if (puzzleInput.getBoardConfig() == null) {
+                System.err.println("Error: Board configuration is null.");
+                return;
+            }
+            
             printPuzzleInfo(puzzleInput);
             
             // At this point, we would typically create a Board object and start solving

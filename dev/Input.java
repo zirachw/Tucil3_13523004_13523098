@@ -14,8 +14,8 @@ public class Input
     private int cols;   // B 
     private int pieces; // N 
     private ArrayList<String> boardConfig; // Configuration of the board
-    private String errorMsg;
     private ExitPosition exitPosition; // Position of the exit
+    private String errorMsg;
 
     public record FirstLine(int rows, int cols, String errorMessage) {}
     public record SecondLine(int pieces, String errorMessage) {}
@@ -33,14 +33,14 @@ public class Input
      * @param errorMsg error message if any
      * @param exitPosition position of the exit
      */
-    public Input(int rows, int cols, int pieces, ArrayList<String> boardConfig, String errorMsg, ExitPosition exitPosition) 
+    public Input(int rows, int cols, int pieces, ArrayList<String> boardConfig, ExitPosition exitPosition, String errorMsg) 
     {
         this.rows = rows;
         this.cols = cols;
         this.pieces = pieces;
         this.boardConfig = boardConfig;
-        this.errorMsg = errorMsg;
         this.exitPosition = exitPosition;
+        this.errorMsg = errorMsg;
     }
 
     /**
@@ -154,13 +154,23 @@ public class Input
      */
     public static SecondLine validateSecondLine(String line) 
     {
-        if (!line.matches("\\d+")) 
+        String[] tokens = line.split("\\s+");
+        if (tokens.length != 1) 
         {
             String message = "Second line must contain exactly one value: N (number of non-primary pieces). Found: " + line;
             return new SecondLine(-1, message);
         }
 
-        int pieces = Integer.parseInt(line);
+        for (String token : tokens) 
+        {
+            if (!token.matches("\\d+")) 
+            {
+                String message = "N must be a non-negative integer. Found N = " + token + ".";
+                return new SecondLine(-1, message);
+            }
+        }
+
+        int pieces = Integer.parseInt(tokens[0]);
 
         if (pieces < 0) 
         {
@@ -182,102 +192,116 @@ public class Input
      */
     public static Object[] validateBoardConfig(ArrayList<String> config, int rows, int cols) 
     {
-        // Check for exits in top or bottom rows (extra rows)
-        boolean hasTopExit = false;
-        boolean hasBottomExit = false;
         ExitPosition exitPosition = null;
         
-        if (config.size() > rows && config.get(0).trim().equals("K")) {
-            hasTopExit = true;
-            exitPosition = new ExitPosition(-1, cols / 2, "TOP");
-            config.remove(0);
+        if (config.size() > rows && config.get(0).matches("K")) {
+
+            if (config.get(0).matches("^\\s*K\\s*$"))
+            {
+                exitPosition = new ExitPosition(0, config.get(0).indexOf('K'), "TOP");
+                config.remove(0);
+            }
+            else 
+                return new Object[] {null, null, "Exit (K) only allowed along with whitespaces"};
         }
         
-        if (config.size() > rows && config.get(config.size() - 1).trim().equals("K")) {
-            if (hasTopExit) {
-                return new Object[] {"Found multiple exits (K) - at both top and bottom. Only one exit is allowed.", null};
-            }
-            hasBottomExit = true;
-            exitPosition = new ExitPosition(-1, cols / 2, "BOTTOM");
-            config.remove(config.size() - 1);
+        if (config.size() > rows && config.get(config.size() - 1).trim().matches("K")) 
+        {
+            if (exitPosition == null) 
+            {
+                if (config.get(config.size() - 1).matches("^\\s*K\\s*$"))
+                {
+                    exitPosition = new ExitPosition(config.size() - 2, config.get(config.size() - 1).indexOf('K'), "BOTTOM");
+                    config.remove(config.size() - 1);
+                }
+                else
+                    return new Object[] {null, null, "Exit (K) only allowed along with whitespaces"};
+            }   
+            else 
+                return new Object[] {null, null, "Found multiple exits (K) - at both top and bottom. Only one exit is allowed."};
         }
         
         if (config.size() != rows) 
-        {
-            return new Object[] {"Board configuration must have exactly " + rows + " rows. Found " + config.size() + " rows.", null};
-        }
+            return new Object[] {null, null, "Board configuration must have exactly " + rows + " rows. Found " + config.size() + " rows."};
         
         boolean foundPrimaryPiece = false;
-        boolean foundExit = hasTopExit || hasBottomExit;
+        boolean foundLeftSpace = false;
+        boolean hasLeftExit    = false;
         
         for (int i = 0; i < config.size(); i++) 
         {
             String line = config.get(i);
-            
-            if (line.length() > 0 && line.charAt(0) == 'K') 
-            {
-                if (foundExit) {
-                    return new Object[] {"Found multiple exits (K). Only one exit is allowed.", null};
-                }
-                foundExit = true;
-                exitPosition = new ExitPosition(i, -1, "LEFT");
-                line = line.substring(1);
-            }
-            
+
             if (line.length() > cols) 
             {
                 if (line.length() == cols + 1 && line.charAt(cols) == 'K') 
                 {
-                    if (foundExit) {
-                        return new Object[] {"Found multiple exits (K). Only one exit is allowed.", null};
+                    if (exitPosition == null) 
+                    {
+                        exitPosition = new ExitPosition(i, cols, "RIGHT");
+                        line = line.substring(0, cols);
                     }
-                    foundExit = true;
-                    exitPosition = new ExitPosition(i, cols, "RIGHT");
-                    line = line.substring(0, cols);
+                    else
+                        return new Object[] {null, null, "Found multiple exits (K). Only one exit is allowed."};
                 } 
                 else 
                 {
-                    return new Object[] {"Row " + (i + 1) + " exceeds expected length. Found " + line.length() + 
-                           " characters when expected " + cols + " or " + (cols + 1) + " with exit.", null};
+                    return new Object[] {null, null, "Row " + (i + 1) + " exceeds expected length. Found " + line.length() + 
+                           " characters when expected " + cols + " or " + (cols + 1) + " with exit."};
                 }
             } 
             else if (line.length() < cols) 
             {
-                return new Object[] {"Row " + (i + 1) + " must have at least " + cols + " columns. Found " + line.length() + " columns.", null};
+                return new Object[] {null, null, "Row " + (i + 1) + " must have at least " + cols + " columns. Found " + line.length() + " columns."};
+            }
+
+            if (line.charAt(0) == ' ')
+            {
+                foundLeftSpace = true;
+                line           = line.substring(1);
+            }
+
+            if (line.charAt(0) == 'K') 
+            {
+                if (!foundLeftSpace && i > 0) 
+                    return new Object[] {null, null, "Exit (K) must be outside the board."};
+
+                if (exitPosition == null) 
+                {
+                    hasLeftExit  = true;
+                    exitPosition = new ExitPosition(i, -1, "LEFT");
+                    line         = line.substring(1);
+                }
+                else
+                    return new Object[] {null, null, "Found multiple exits (K). Only one exit is allowed."};
             }
             
             for (int j = 0; j < line.length(); j++) 
             {
                 char c = line.charAt(j);
                 
-                if (c == 'P') 
-                {
-                    foundPrimaryPiece = true;
-                } 
-                else if (c == 'K') 
-                {
-                    return new Object[] {"Exit (K) must be located outside the board, not on it. Found at row " + (i + 1) + 
-                          ", column " + (j + 1) + ".", null};
-                } 
-                else if (c != '.' && !Character.isLetter(c)) 
-                {
-                    return new Object[] {"Invalid character in board configuration at row " + (i + 1) + 
-                           ", column " + (j + 1) + ": " + c + ". Expected letters or '.' (for empty cells).", null};
-                }
+                if (c == 'P') foundPrimaryPiece = true;
             }
+
+            config.set(i, line);
         }
         
         if (!foundPrimaryPiece) 
         {
-            return new Object[] {"Primary piece (P) not found in board configuration.", null};
+            return new Object[] {null, null, "Primary piece (P) not found in board configuration."};
         }
         
-        if (!foundExit) 
+        if (exitPosition == null) 
         {
-            return new Object[] {"Exit (K) not found in board configuration.", null};
+            return new Object[] {null, null, "Exit (K) not found in board configuration." };
+        }
+
+        if (hasLeftExit && !foundLeftSpace) 
+        {
+            return new Object[] {null, null, "Exit (K) must be outside the board."};
         }
         
-        return new Object[] {null, exitPosition}; // No errors found, return the exit position
+        return new Object[] {config, exitPosition, null}; // No errors found
     }
 
     /**
@@ -295,108 +319,96 @@ public class Input
     public static Input readInput(String filePath) throws IOException 
     {
         boolean firstLine = true;
-        boolean secondLine = false;
+        boolean secondLine = true;
+        String errorMessage = null;
         int rows = -1, cols = -1, pieces = -1;
         ArrayList<String> boardConfig = new ArrayList<>();
         
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String buffer;
-            while ((buffer = br.readLine()) != null) 
+        BufferedReader br = new BufferedReader(new FileReader(filePath));
+        BufferedReader checker = new BufferedReader(new FileReader(filePath));
+
+        int length  = 0;
+        while (checker.readLine() != null) length++;
+        checker.close();
+
+        String buffer;
+        while ((buffer = br.readLine()) != null) 
+        {
+            if (firstLine) 
             {
-                buffer = buffer.trim();
+                FirstLine first = validateFirstLine(buffer);
+                rows = first.rows();
+                cols = first.cols();
+                firstLine = false;
                 
-                if (buffer.isEmpty()) 
+                if (first.errorMessage() != null) 
                 {
-                    continue;
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, first.errorMessage());
                 }
-                
-                if (firstLine) 
+                else if (length < 2) 
                 {
-                    FirstLine result = validateFirstLine(buffer);
-                    rows = result.rows();
-                    cols = result.cols();
-                    
-                    if (result.errorMessage() != null) 
-                    {
-                        return new Input(-1, -1, -1, null, result.errorMessage(), null);
-                    }
-                    
-                    firstLine = false;
-                    secondLine = true;
-                    continue;
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, "No number of non-primary pieces found in the file.");
                 }
-                
-                if (secondLine) 
+                else continue;
+            }
+            else if (secondLine)
+            {
+                SecondLine second = validateSecondLine(buffer);
+                pieces = second.pieces();
+                secondLine = false;
+
+                if (second.errorMessage() != null) 
                 {
-                    SecondLine result = validateSecondLine(buffer);
-                    pieces = result.pieces();
-                    
-                    if (result.errorMessage() != null) 
-                    {
-                        return new Input(-1, -1, -1, null, result.errorMessage(), null);
-                    }
-                    
-                    secondLine = false;
-                    continue;
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, second.errorMessage());
                 }
-                
+                else if (length < 3) 
+                {
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, "No board configuration found in the file.");
+                }
+                else continue;
+            }
+            else
+            {
+                // Check if the line is empty or contains only whitespace
+                if (buffer.matches("^\s*$")) 
+                {
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, "Found empty line in board configuration");
+                }
+
+                // Check regex for valid characters, which is Uppercase A-Z, ' ', and '.'.
+                if (!buffer.matches("^[A-Z \\.]*$"))
+                {
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, "Found invalid character in board configuration");
+                }
+
+                // Check if the line contains more than one exit (K)
+                if (!buffer.matches("^[^K]*K?[^K]*$"))
+                {
+                    br.close();
+                    return new Input(-1, -1, -1, null, null, "Found multiple exits (K) in the same line");
+                }
+
                 boardConfig.add(buffer);
             }
         }
         
-        Object[] validationResult = validateBoardConfig(boardConfig, rows, cols);
-        String configError = (String) validationResult[0];
-        ExitPosition exitPosition = (ExitPosition) validationResult[1];
+        br.close();
         
-        if (configError != null) 
-        {
-            return new Input(-1, -1, -1, null, configError, null);
-        }
+        Object[]          validationResult = validateBoardConfig (boardConfig, rows, cols);
+        ArrayList<String> actualBoard      = (ArrayList<String>) validationResult[0];
+        ExitPosition      exitPosition     = (ExitPosition)      validationResult[1];
+                          errorMessage     = (String)            validationResult[2];
         
-        // Extract the actual board rows (removing any exit-only rows and exit characters)
-        ArrayList<String> actualBoardRows = new ArrayList<>();
-        ArrayList<String> originalBoardConfig = new ArrayList<>(boardConfig);
+        if (errorMessage != null) 
+            return new Input(-1, -1, -1, null, null, errorMessage);
         
-        // Case 1: Extra row at the top with K (already handled in validateBoardConfig)
-        // Case 2: Extra row at the bottom with K (already handled in validateBoardConfig)
-        
-        // Process the rows that are part of the actual board
-        for (int i = 0; i < Math.min(rows, boardConfig.size()); i++) {
-            String line = boardConfig.get(i);
-            
-            // Case 3: Remove left-side exit
-            if (line.startsWith("K")) {
-                line = line.substring(1);
-            }
-            
-            // Case 4: Remove right-side exit
-            if (line.length() > cols && line.charAt(cols) == 'K') {
-                line = line.substring(0, cols);
-            }
-            
-            // Ensure the line is exactly cols characters long
-            if (line.length() < cols) {
-                StringBuilder sb = new StringBuilder(line);
-                while (sb.length() < cols) {
-                    sb.append('.');  // Pad with empty cells if needed
-                }
-                line = sb.toString();
-            } else if (line.length() > cols) {
-                line = line.substring(0, cols);  // Truncate if too long
-            }
-            
-            actualBoardRows.add(line);
-        }
-        
-        // Pad the board if we don't have enough rows
-        while (actualBoardRows.size() < rows) {
-            StringBuilder sb = new StringBuilder();
-            for (int j = 0; j < cols; j++) {
-                sb.append('.');
-            }
-            actualBoardRows.add(sb.toString());
-        }
-        
-        return new Input(rows, cols, pieces, actualBoardRows, null, exitPosition);
+        else
+            return new Input(rows, cols, pieces, actualBoard, exitPosition, null);
     }
 }
