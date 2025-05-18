@@ -1,39 +1,39 @@
 package src.Algorithm;
+
 import src.ADT.*;
 import java.util.*;
 
-public class GBFS {
+public class GBFS 
+{
     private Board initialBoard;
     private Set<String> visitedStates;
     private int nodesExplored;
     
-    public GBFS(Board board) {
+    public GBFS(Board board) 
+    {
         this.initialBoard = board;
         this.visitedStates = new HashSet<>();
         this.nodesExplored = 0;
     }
 
-    public List<int[]> solve(String heuristic){
-        if(heuristic.equals("blockingCars")){
-            return solveBlockingCars();
-        } else if(heuristic.equals("manhattanDistance")){
-            return solveManhattanDistance();
-        } else {
-            throw new IllegalArgumentException("Invalid heuristic: " + heuristic);
-        }
+    public List<int[]> solve(String heuristic)
+    {
+        if(heuristic.equals("Blocking")) return solveBlockingCars();
+        else if(heuristic.equals("Manhattan")) return solveManhattanDistance();
+        else throw new IllegalArgumentException("Invalid heuristic: " + heuristic);
     }
 
-    private List<int[]> solveBlockingCars() {
+    private List<int[]> solveBlockingCars() 
+    {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getHValue()));
-
         List<int[]> initialMoves = new ArrayList<>();
         
         int initialHValue = State.calculateBlockingCarHeuristic(initialBoard);
-
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
         int counter = 0;
-        while(!queue.isEmpty()){
+        while(!queue.isEmpty())
+        {
             counter++;
             System.out.println(counter);
             State curState = queue.poll();
@@ -42,27 +42,25 @@ public class GBFS {
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
-            if(curBoard.isSolved()){
-                return curMoves;
-            }
+            if(curBoard.isSolved()) return curMoves;
 
             String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)){
-                continue;
-            }else{
-                visitedStates.add(curBoardStr);
-            }
+            if(visitedStates.contains(curBoardStr)) continue;
+            else visitedStates.add(curBoardStr);
             
             List<Car> cars = curBoard.getCars();
-            for(int i = 0; i < cars.size(); i++){
+            for(int i = 0; i < cars.size(); i++)
+            {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
                 System.out.println("Moving car " + cars.get(i).getId() + " with valid moves: " + validMoves);
-                for(Integer moveAmount : validMoves){
+                for(Integer moveAmount : validMoves)
+                {
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
                     String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr)){
+                    if(!visitedStates.contains(newBoardStr))
+                    {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         
@@ -76,17 +74,17 @@ public class GBFS {
         return new ArrayList<>();
     }
 
-    private List<int[]> solveManhattanDistance() {
+    private List<int[]> solveManhattanDistance() 
+    {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getHValue()));
-
         List<int[]> initialMoves = new ArrayList<>();
         
         int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
-
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
         int counter = 0;
-        while(!queue.isEmpty()){
+        while(!queue.isEmpty())
+        {
             counter++;
             System.out.println(counter);
             State curState = queue.poll();
@@ -95,27 +93,25 @@ public class GBFS {
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
-            if(curBoard.isSolved()){
-                return curMoves;
-            }
+            if(curBoard.isSolved()) return curMoves;
 
             String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)){
-                continue;
-            }else{
-                visitedStates.add(curBoardStr);
-            }
+            if(visitedStates.contains(curBoardStr)) continue;
+            else visitedStates.add(curBoardStr);
             
             List<Car> cars = curBoard.getCars();
-            for(int i = 0; i < cars.size(); i++){
+            for(int i = 0; i < cars.size(); i++)
+            {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
                 System.out.println("Moving piece " + cars.get(i).getId() + " with valid moves: " + validMoves);
-                for(Integer moveAmount : validMoves){
+                for(Integer moveAmount : validMoves)
+                {
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
                     String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr)){
+                    if(!visitedStates.contains(newBoardStr))
+                    {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         
@@ -129,18 +125,23 @@ public class GBFS {
         return new ArrayList<>();
     }
 
-    public void displaySolutions(List<int[]> moves) {
-        if(moves.isEmpty()){
+    public void displaySolutions(List<int[]> moves) 
+    {
+        if(moves.isEmpty())
+        {
             System.out.println("No solution found.");
             return;
         }
+
         System.out.println("Solution found with " + nodesExplored + " nodes explored:");
         System.out.println("Initial board state:");
         Board firstBoard = initialBoard;
         System.out.println(firstBoard.toString());
         System.out.println("Result:");
         Board resultBoard = initialBoard;
-        for(int[] move : moves) {
+        
+        for(int[] move : moves) 
+        {
             int carIndex = move[0];
             int moveAmount = move[1];
             resultBoard = resultBoard.applyMove(carIndex, moveAmount);
