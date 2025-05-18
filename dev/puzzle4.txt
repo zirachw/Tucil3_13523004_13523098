@@ -5,5 +5,4 @@ GHI..M
 GHIPPM
 CCCZ.M
 ...ZDD
-EE.FF.
-   K
+EE.FF.K

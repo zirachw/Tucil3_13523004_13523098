@@ -238,7 +238,7 @@ public class Input
                 {
                     if (exitPosition == null) 
                     {
-                        exitPosition = new ExitPosition(i, cols, "RIGHT");
+                        exitPosition = new ExitPosition(i, cols - 1, "RIGHT");
                         line = line.substring(0, cols);
                     }
                     else
