@@ -23,13 +23,13 @@ public class UCS {
         // UCS only uses g(n) - the cost from start to current node
         queue.add(new State(initialBoard, initialMoves)); // UCS constructor
         
-        int counter = 0;
+        // int counter = 0;
         while(!queue.isEmpty()){
-            counter++;
-            System.out.println(counter);
+            // counter++;
+            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            System.out.println("Current board state: \n" + curBoard.toString());
+            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
@@ -47,7 +47,7 @@ public class UCS {
             List<Car> pieces = curBoard.getCars();
             for(int i = 0; i < pieces.size(); i++){
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                System.out.println("Moving piece " + pieces.get(i).getId() + " with valid moves: " + validMoves);
+                // System.out.println("Moving piece " + pieces.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);

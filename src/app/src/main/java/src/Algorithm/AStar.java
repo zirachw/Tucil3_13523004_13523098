@@ -30,45 +30,45 @@ public class AStar {
         
         int intialHValue = State.calculateBlockingCarHeuristic(initialBoard);
 
+        String initialBoardStr = State.getBoardStateString(initialBoard);
+        visitedStates.add(initialBoardStr);
+
         queue.add(new State(initialBoard, initialMoves, intialHValue));
         
-        int counter = 0;
         while(!queue.isEmpty()){
-            counter++;
-            System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
+
             if(curBoard.isSolved()){
                 return curMoves;
             }
 
-            String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)){
+            // Set maximum cost limit
+            int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
+            if(curMoves.size() > maxCost){
                 continue;
-            }else{
-                visitedStates.add(curBoardStr);
             }
             
             List<Car> pieces = curBoard.getCars();
             for(int i = 0; i < pieces.size(); i++){
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                System.out.println("Moving piece " + pieces.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
                     String newBoardStr = State.getBoardStateString(newBoard);
                     
                     if(!visitedStates.contains(newBoardStr)){
+                        visitedStates.add(newBoardStr);
+                        
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         
                         int hValue = State.calculateBlockingCarHeuristic(newBoard);
                         queue.add(new State(newBoard, newMoves, hValue));
-                    }else{}
+                    }
                 }
             }
         }
@@ -77,57 +77,57 @@ public class AStar {
     }
 
     private List<int[]> solveManhattanDistance() {
-    PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getFValue()));
+        PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getFValue()));
 
-    List<int[]> initialMoves = new ArrayList<>();
-    
-    int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
-
-    queue.add(new State(initialBoard, initialMoves, initialHValue));
-    
-    int counter = 0;
-    while(!queue.isEmpty()){
-        counter++;
-        System.out.println(counter);
-        State curState = queue.poll();
-        Board curBoard = curState.getBoard();
-        // System.out.println("Current board state: \n" + curBoard.toString());
-        List<int[]> curMoves = curState.getMoves();
-
-        nodesExplored++;
-        if(curBoard.isSolved()){
-            return curMoves;
-        }
-
-        String curBoardStr = State.getBoardStateString(curBoard);
-        if(visitedStates.contains(curBoardStr)){
-            continue;
-        }else{
-            visitedStates.add(curBoardStr);
-        }
+        List<int[]> initialMoves = new ArrayList<>();
         
-        List<Car> pieces = curBoard.getCars();
-        for(int i = 0; i < pieces.size(); i++){
-            List<Integer> validMoves = curBoard.getValidMoves(i);
-            // System.out.println("Moving piece " + pieces.get(i).getId() + " with valid moves: " + validMoves);
-            for(Integer moveAmount : validMoves){
-                Board newBoard = curBoard.copy();
-                newBoard = newBoard.applyMove(i, moveAmount);
-                String newBoardStr = State.getBoardStateString(newBoard);
-                
-                if(!visitedStates.contains(newBoardStr)){
-                    List<int[]> newMoves = new ArrayList<>(curMoves);
-                    newMoves.add(new int[]{i, moveAmount});
+        int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
+
+        String initialBoardStr = State.getBoardStateString(initialBoard);
+        visitedStates.add(initialBoardStr);
+
+        queue.add(new State(initialBoard, initialMoves, initialHValue));
+        
+        while(!queue.isEmpty()){
+            State curState = queue.poll();
+            Board curBoard = curState.getBoard();
+            List<int[]> curMoves = curState.getMoves();
+
+            nodesExplored++;
+            
+            if(curBoard.isSolved()){
+                return curMoves;
+            }
+
+            int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
+            if(curMoves.size() > maxCost){
+                continue;
+            }
+            
+            List<Car> pieces = curBoard.getCars();
+            for(int i = 0; i < pieces.size(); i++){
+                List<Integer> validMoves = curBoard.getValidMoves(i);
+                for(Integer moveAmount : validMoves){
+                    Board newBoard = curBoard.copy();
+                    newBoard = newBoard.applyMove(i, moveAmount);
+                    String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    int hValue = State.calculateManhattanDistanceHeuristic(newBoard);
-                    queue.add(new State(newBoard, newMoves, hValue));
+                    // Check if state has been visited BEFORE adding to queue
+                    if(!visitedStates.contains(newBoardStr)){
+                        visitedStates.add(newBoardStr); // Add to visited immediately
+                        
+                        List<int[]> newMoves = new ArrayList<>(curMoves);
+                        newMoves.add(new int[]{i, moveAmount});
+                        
+                        int hValue = State.calculateManhattanDistanceHeuristic(newBoard);
+                        queue.add(new State(newBoard, newMoves, hValue));
+                    }
                 }
             }
         }
-    }
 
-    return new ArrayList<>();
-}
+        return new ArrayList<>();
+    }
 
     public void displaySolutions(List<int[]> moves) {
         if(moves.isEmpty()){
@@ -147,6 +147,5 @@ public class AStar {
             System.out.println("Move piece " + resultBoard.getCars().get(pieceIndex).getId() + " by " + moveAmount);
             System.out.println(resultBoard.toString());
         }
-
     }
 }

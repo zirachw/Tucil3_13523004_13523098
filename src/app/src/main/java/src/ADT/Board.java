@@ -283,17 +283,28 @@ public class Board {
      */
     public boolean isSolved() 
     {
-        for (Car car : this.getCars()) 
-        {
-            if (car.isPrimary()) 
-            {
-                if (car.getOrientation() == HORIZONTAL)
-                    return (car.getStartCol() + car.getLength() - 1 == exitCol && car.getStartRow() == exitRow);
-                
-                else
-                    return (car.getStartRow() + car.getLength() - 1 == exitRow && car.getStartCol() == exitCol);
+        Car primaryCar = getPrimaryCar();
+        if (primaryCar == null) return false;
+        
+        int startRow = primaryCar.getStartRow();
+        int startCol = primaryCar.getStartCol();
+        int endRow = startRow + (primaryCar.getOrientation() == VERTICAL ? primaryCar.getLength() - 1 : 0);
+        int endCol = startCol + (primaryCar.getOrientation() == HORIZONTAL ? primaryCar.getLength() - 1 : 0);
+        
+        if (primaryCar.getOrientation() == HORIZONTAL) {
+            if (exitCol == this.getCols() - 1) {
+                return (endCol == this.getCols() - 1) && (startRow == exitRow);
+            } else if (exitCol == 0) {
+                return (startCol == 0) && (startRow == exitRow);
+            }
+        } else {
+            if (exitRow == this.getRows()-1) {
+                return (endRow == this.getRows()-1) && (startCol == exitCol);
+            } else if (exitRow == 0) {
+                return (startRow == 0) && (startCol == exitCol);
             }
         }
+        
         return false;
     }
     

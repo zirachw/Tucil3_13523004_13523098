@@ -32,13 +32,13 @@ public class GBFS {
 
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
-        int counter = 0;
+        // int counter = 0;
         while(!queue.isEmpty()){
-            counter++;
-            System.out.println(counter);
+            // counter++;
+            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            System.out.println("Current board state: \n" + curBoard.toString());
+            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
@@ -56,7 +56,7 @@ public class GBFS {
             List<Car> cars = curBoard.getCars();
             for(int i = 0; i < cars.size(); i++){
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                System.out.println("Moving car " + cars.get(i).getId() + " with valid moves: " + validMoves);
+                // System.out.println("Moving car " + cars.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
@@ -85,13 +85,13 @@ public class GBFS {
 
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
-        int counter = 0;
+        // int counter = 0;
         while(!queue.isEmpty()){
-            counter++;
-            System.out.println(counter);
+            // counter++;
+            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            System.out.println("Current board state: \n" + curBoard.toString());
+            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
             nodesExplored++;
@@ -109,7 +109,7 @@ public class GBFS {
             List<Car> cars = curBoard.getCars();
             for(int i = 0; i < cars.size(); i++){
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                System.out.println("Moving piece " + cars.get(i).getId() + " with valid moves: " + validMoves);
+                // System.out.println("Moving piece " + cars.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);

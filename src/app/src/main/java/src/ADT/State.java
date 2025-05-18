@@ -85,40 +85,69 @@ public class State implements Comparable<State> {
         int blockingCars = 0;
         
         if (primaryCar.getOrientation() == 1) {
-            // Primary car moves horizontally
+            int leftEdge = primaryCar.getStartCol();
             int rightEdge = primaryCar.getStartCol() + primaryCar.getLength() - 1;
-            distance = exitCol - rightEdge - 1;
             
-            // Count blocking cars between primary car and exit
-            Set<Character> blockingPieceIds = new HashSet<>();
-            for (int col = rightEdge + 1; col < exitCol; col++) {
-                if (col >= 0 && col < board.getCols() && primaryCar.getStartRow() >= 0 && primaryCar.getStartRow() < board.getRows()) {
-                    char cell = board.getGrid()[primaryCar.getStartRow()][col];
-                    if (cell != '.') {
-                        blockingPieceIds.add(cell);
+            if (exitCol == board.getCols()-1) {
+                distance = exitCol - rightEdge - 1;
+                
+                Set<Character> blockingPieceIds = new HashSet<>();
+                for (int col = rightEdge + 1; col < exitCol; col++) {
+                    if (col >= 0 && col < board.getCols() && primaryCar.getStartRow() >= 0 && primaryCar.getStartRow() < board.getRows()) {
+                        char cell = board.getGrid()[primaryCar.getStartRow()][col];
+                        if (cell != '.') {
+                            blockingPieceIds.add(cell);
+                        }
                     }
                 }
+                blockingCars = blockingPieceIds.size();
+            } else if (exitCol == 0) {
+                distance = leftEdge - (exitCol + 1);
+                
+                Set<Character> blockingPieceIds = new HashSet<>();
+                for (int col = leftEdge - 1; col > exitCol; col--) {
+                    if (col >= 0 && col < board.getCols() && primaryCar.getStartRow() >= 0 && primaryCar.getStartRow() < board.getRows()) {
+                        char cell = board.getGrid()[primaryCar.getStartRow()][col];
+                        if (cell != '.') {
+                            blockingPieceIds.add(cell);
+                        }
+                    }
+                }
+                blockingCars = blockingPieceIds.size();
             }
-            blockingCars = blockingPieceIds.size();
         } else {
-            // Primary car moves vertically
+            int topEdge = primaryCar.getStartRow();
             int bottomEdge = primaryCar.getStartRow() + primaryCar.getLength() - 1;
-            distance = exitRow - bottomEdge - 1;
             
-            // Count blocking cars between primary car and exit
-            Set<Character> blockingPieceIds = new HashSet<>();
-            for (int row = bottomEdge + 1; row < exitRow; row++) {
-                if (row >= 0 && row < board.getRows() && primaryCar.getStartCol() >= 0 && primaryCar.getStartCol() < board.getCols()) {
-                    char cell = board.getGrid()[row][primaryCar.getStartCol()];
-                    if (cell != '.') {
-                        blockingPieceIds.add(cell);
+            if (exitRow == board.getRows()-1) {
+                distance = exitRow - bottomEdge - 1;
+                
+                Set<Character> blockingPieceIds = new HashSet<>();
+                for (int row = bottomEdge + 1; row < exitRow; row++) {
+                    if (row >= 0 && row < board.getRows() && primaryCar.getStartCol() >= 0 && primaryCar.getStartCol() < board.getCols()) {
+                        char cell = board.getGrid()[row][primaryCar.getStartCol()];
+                        if (cell != '.') {
+                            blockingPieceIds.add(cell);
+                        }
                     }
                 }
+                blockingCars = blockingPieceIds.size();
+            } else if (exitRow == 0) {
+                distance = topEdge - (exitRow + 1);
+                
+                Set<Character> blockingPieceIds = new HashSet<>();
+                for (int row = topEdge - 1; row > exitRow; row--) {
+                    if (row >= 0 && row < board.getRows() && primaryCar.getStartCol() >= 0 && primaryCar.getStartCol() < board.getCols()) {
+                        char cell = board.getGrid()[row][primaryCar.getStartCol()];
+                        if (cell != '.') {
+                            blockingPieceIds.add(cell);
+                        }
+                    }
+                }
+                blockingCars = blockingPieceIds.size();
             }
-            blockingCars = blockingPieceIds.size();
         }
         
-        // Return distance + penalty for blocking cars
         return Math.max(0, distance) + blockingCars * 2;
     }
     
@@ -131,14 +160,26 @@ public class State implements Comparable<State> {
         int exitCol = board.getExitCol();
         
         if (primaryCar.getOrientation() == 1) {
-            // For horizontal car, calculate distance from right edge to exit
+            int leftEdge = primaryCar.getStartCol();
             int rightEdge = primaryCar.getStartCol() + primaryCar.getLength() - 1;
-            return Math.max(0, exitCol - rightEdge - 1);
+            
+            if (exitCol == board.getCols()) {
+                return Math.max(0, exitCol - rightEdge - 1);
+            } else if (exitCol == -1) {
+                return Math.max(0, leftEdge - (exitCol + 1));
+            }
         } else {
-            // For vertical car, calculate distance from bottom edge to exit
+            int topEdge = primaryCar.getStartRow();
             int bottomEdge = primaryCar.getStartRow() + primaryCar.getLength() - 1;
-            return Math.max(0, exitRow - bottomEdge - 1);
+            
+            if (exitRow == board.getRows()) {
+                return Math.max(0, exitRow - bottomEdge - 1);
+            } else if (exitRow == -1) {
+                return Math.max(0, topEdge - (exitRow + 1));
+            }
         }
+        
+        return 0;
     }
     
     @Override
