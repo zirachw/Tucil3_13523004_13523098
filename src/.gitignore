@@ -7,7 +7,7 @@
 # Ignore IntelliJ IDEA settings
 .idea
 
-
+app/build/*
 app/build/generated/
 app/build/resources/
 app/build/scripts/
