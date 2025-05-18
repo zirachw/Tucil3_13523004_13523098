@@ -263,13 +263,13 @@ public class Board {
             return;
         }
         
-        if (carLocations.size() < this.getNumCars())
+        if (carLocations.size() - 1 < this.getNumCars())
         {
             this.errorMsg = "There are too few cars. Expected " + N + " but found " + carLocations.size();
             return;
         }
 
-        if (carLocations.size() > this.getNumCars())
+        if (carLocations.size() - 1 > this.getNumCars())
         {
             this.errorMsg = "There are too many cars. Expected " + N + " but found " + carLocations.size();
             return;

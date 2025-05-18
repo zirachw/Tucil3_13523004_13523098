@@ -291,6 +291,41 @@ public class Input
         {
             String line = this.boardConfig.get(i);
 
+            if (line.charAt(0) == ' ')
+            {
+                if (line.charAt(1) != ' ')
+                {
+                    foundLeftSpace = true;
+                    line           = line.substring(1);
+                }
+                else
+                {
+                    this.errorMsg = "Too many spaces at the beginning of row " + (i + 1) + ". Maximum 1 space allowed.";
+                    return;
+                }
+            }
+            
+            if (line.charAt(0) == 'K') 
+            {
+                if (!foundLeftSpace && i > 0) 
+                {
+                    this.errorMsg = "Exit (K) must be outside the board.";
+                    return;
+                }
+
+                if (exitPosition == null) 
+                {
+                    hasLeftExit  = true;
+                    exitPosition = new ExitPosition(i, 0, "LEFT");
+                    line         = line.substring(1);
+                }
+                else
+                {
+                    this.errorMsg = "Found multiple exits (K). Only one exit is allowed.";
+                    return;
+                }
+            }
+            
             if (line.length() > this.getCols()) 
             {
                 if (line.length() == this.getCols() + 1 && line.charAt(this.getCols()) == 'K') 
@@ -317,41 +352,6 @@ public class Input
             {
                 this.errorMsg = "Row " + (i + 1) + " must have at least " + this.getCols() + " columns. Found " + line.length() + " columns.";
                 return;
-            }
-
-            if (line.charAt(0) == ' ')
-            {
-                if (line.charAt(1) != ' ')
-                {
-                    foundLeftSpace = true;
-                    line           = line.substring(1);
-                }
-                else
-                {
-                    this.errorMsg = "Too many spaces at the beginning of row " + (i + 1) + ". Maximum 1 space allowed.";
-                    return;
-                }
-            }
-
-            if (line.charAt(0) == 'K') 
-            {
-                if (!foundLeftSpace && i > 0) 
-                {
-                    this.errorMsg = "Exit (K) must be outside the board.";
-                    return;
-                }
-
-                if (exitPosition == null) 
-                {
-                    hasLeftExit  = true;
-                    exitPosition = new ExitPosition(i, 0, "LEFT");
-                    line         = line.substring(1);
-                }
-                else
-                {
-                    this.errorMsg = "Found multiple exits (K). Only one exit is allowed.";
-                    return;
-                }
             }
             
             for (int j = 0; j < line.length(); j++) 
