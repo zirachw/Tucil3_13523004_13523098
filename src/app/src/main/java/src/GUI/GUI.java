@@ -15,6 +15,7 @@ import javafx.stage.WindowEvent;
 import javafx.event.EventHandler;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.util.Arrays;
@@ -26,18 +27,51 @@ import src.ADT.Board;
  */
 public class GUI extends Application 
 {
-    private Button findButton;
-    private Button savePngButton;
+    // Algorithm buttons
+    private Button aStarButton;
+    private Button fringeButton;
+    private Button gbfsButton;
+    private Button ucsButton;
+    
+    // Heuristic buttons
+    private Button distanceButton;
+    private Button blockingButton;
+    
+    // Control buttons
+    private Button loadButton;
+    private Button solveButton;
+    
+    // Animation control buttons
+    private Button playButton;
+    private Button pauseButton;
+    private Button stopButton;
+    
+    // Save button
     private Button saveTxtButton;
-    private TextField testCaseInput;
-    private ListView<String> testCasesList;
-    private ListView<String> outputFilesList;
+    
+    // Speed slider
+    private Slider speedSlider;
+    
+    // Text elements
+    private Label fileNameLabel;
     private TextArea previewArea;
     private VBox mainContent;
-    private String fileName;
+    
+    // State variables
+    private String fileName = "~";
     private long searchTime;
     private int nodesExplored;
+    private int currentStep;
+    private int totalSteps;
     private Board board;
+    
+    // Algorithm and heuristic selection
+    private String selectedAlgorithm = "";
+    private String selectedHeuristic = "";
+    
+    // Animation state
+    private boolean isPlaying = false;
+    private boolean isPaused = false;
 
     /**
      * Start the JavaFX application.
@@ -67,107 +101,33 @@ public class GUI extends Application
 
         VBox sidebarWrapper = new VBox();
         sidebarWrapper.setAlignment(Pos.CENTER);
-        sidebarWrapper.setPrefWidth(400);
+        sidebarWrapper.setPrefWidth(400); // Increased sidebar width
         VBox.setVgrow(sidebarWrapper, Priority.ALWAYS);
 
         VBox sidebar = new VBox(20);
-        sidebar.setPadding(new Insets(20));
+        sidebar.setPadding(new Insets(25)); // Increased padding
         sidebar.setStyle("-fx-background-color: white;");
         sidebar.setAlignment(Pos.TOP_CENTER);
         sidebar.setMaxHeight(Region.USE_PREF_SIZE);
 
+        // Title section
         VBox titleSection = new VBox(5);
         titleSection.setAlignment(Pos.CENTER);
         
         Label title = new Label("Rush Hour Puzzle Solver");
-        title.setFont(Font.font("Poly", 24));
+        title.setFont(Font.font("Poly", 28)); // Increased font size
         
-        Label copyrightLabel = new Label("~ rzi - 13523004 ~");
-        copyrightLabel.setFont(Font.font("Poly", 12));
-        copyrightLabel.setStyle("-fx-text-fill: #808080;");
-        
-        titleSection.getChildren().addAll(title, copyrightLabel);
-        VBox.setMargin(titleSection, new Insets(0, 0, 10, 0));
+        titleSection.getChildren().addAll(title);
+        VBox.setMargin(titleSection, new Insets(0, 0, 10, 0)); // Increased margin
 
-        HBox inputSection = new HBox(15);
-        inputSection.setAlignment(Pos.CENTER);
-        
-        testCaseInput = new TextField();
-        testCaseInput.setPromptText("Type test case .txt");
-        testCaseInput.setPrefWidth(220);
-        testCaseInput.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 20;" +
-            "-fx-border-radius: 20;" +
-            "-fx-padding: 8;" +
-            "-fx-font-family: 'Poly';" +
-            "-fx-prompt-text-fill: #757575;" +
-            "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0, 0, 0);"
-        );
-        
-        findButton = new Button("Find!");
-        findButton.setPrefWidth(80);
-        findButton.setStyle(
-            "-fx-background-color: #E0E0E0;" +
-            "-fx-background-radius: 20;" +
-            "-fx-padding: 8;" +
-            "-fx-font-family: 'Poly';" +
-            "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 10, 0, 0, 0);"
-        );
-        
-        inputSection.getChildren().addAll(testCaseInput, findButton);
-
-        HBox listsContainer = new HBox(20);
-        listsContainer.setAlignment(Pos.CENTER);
-
-        VBox testCasesColumn = new VBox(5);
-        testCasesColumn.setAlignment(Pos.CENTER);
-        testCasesColumn.setSpacing(10);
-        
-        Label testCasesLabel = new Label("~ Available Test Cases ~");
-        testCasesLabel.setFont(Font.font("Poly", 14));
-        testCasesLabel.setAlignment(Pos.CENTER);
-        
-        testCasesList = new ListView<>();
-        testCasesList.setPrefHeight(170);
-        testCasesList.setPrefWidth(170);
-        testCasesList.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-border-color: black;" +
-            "-fx-border-width: 1px;" +
-            "-fx-font-family: 'Poly';"
-        );
-        
-        testCasesColumn.getChildren().addAll(testCasesLabel, testCasesList);
-
-        VBox outputColumn = new VBox(5);
-        outputColumn.setAlignment(Pos.CENTER);
-        outputColumn.setSpacing(10);
-        
-        Label outputLabel = new Label("~ Output ~");
-        outputLabel.setFont(Font.font("Poly", 14));
-        outputLabel.setAlignment(Pos.CENTER);
-        
-        outputFilesList = new ListView<>();
-        outputFilesList.setPrefHeight(170);
-        outputFilesList.setPrefWidth(170);
-        outputFilesList.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-border-color: black;" +
-            "-fx-border-width: 1px;" +
-            "-fx-font-family: 'Poly';"
-        );
-        
-        outputColumn.getChildren().addAll(outputLabel, outputFilesList);
-        listsContainer.getChildren().addAll(testCasesColumn, outputColumn);
-
+        // Preview section
         Label previewLabel = new Label("~ Preview ~");
-        previewLabel.setFont(Font.font("Poly", 14));
+        previewLabel.setFont(Font.font("Poly", 18)); // Increased font size
         previewLabel.setAlignment(Pos.CENTER);
         
         previewArea = new TextArea();
-        previewArea.setPrefHeight(170);
-        previewArea.setPrefWidth(320);
+        previewArea.setPrefHeight(220);
+        previewArea.setPrefWidth(350); // Increased width
         previewArea.setEditable(false);
         previewArea.setWrapText(true);
         previewArea.setFont(Font.font("Monospace", 12));
@@ -179,41 +139,110 @@ public class GUI extends Application
             "-fx-faint-focus-color: transparent;"
         );
 
-        Label instructionLabel = new Label("Manually add Test Case with *.txt file in the ~/test directory. \nThen, restart the App or click \"Find!\" button to refresh the list.");
-        instructionLabel.setFont(Font.font("Poly", 11));
-        instructionLabel.setWrapText(true);
-        instructionLabel.setAlignment(Pos.CENTER);
-        instructionLabel.setTextAlignment(TextAlignment.CENTER);
-        instructionLabel.setPrefWidth(350);
+        // File loading section
+        HBox fileLoadSection = new HBox(10);
+        fileLoadSection.setAlignment(Pos.CENTER);
+        
+        loadButton = new Button("Load .txt");
+        loadButton.setStyle(createButtonStyle(false));
+        
+        fileNameLabel = new Label(fileName);
+        fileNameLabel.setFont(Font.font("Poly", 14));
+        
+        fileLoadSection.getChildren().addAll(loadButton, fileNameLabel);
+        VBox.setMargin(fileLoadSection, new Insets(10, 0, 0, 0));
+        
+        // Add separator after file loading section
+        Separator fileSeparator = new Separator();
+        fileSeparator.setStyle("-fx-background-color: #CCCCCC;");
+        VBox.setMargin(fileSeparator, new Insets(5, 0, 10, 0));
 
-        HBox saveButtons = new HBox(15);
-        saveButtons.setAlignment(Pos.CENTER);
+        // Algorithm section
+        Label algorithmLabel = new Label("~ Algorithm ~");
+        algorithmLabel.setFont(Font.font("Poly", 16)); // Increased font size
+        algorithmLabel.setAlignment(Pos.CENTER);
         
-        String buttonStyle = 
-            "-fx-background-color: #808080;" +
-            "-fx-text-fill: white;" +
-            "-fx-background-radius: 5;" +
-            "-fx-padding: 8 20;" +
-            "-fx-font-family: 'Poly';";
-            
-        saveTxtButton = new Button("Save .txt");
-        savePngButton = new Button("Save .png");
+        HBox algorithmButtons = new HBox(10); // Increased spacing
+        algorithmButtons.setAlignment(Pos.CENTER);
         
-        saveTxtButton.setStyle(buttonStyle);
-        savePngButton.setStyle(buttonStyle);
-        saveTxtButton.setDisable(true);
-        savePngButton.setDisable(true);
+        aStarButton = new Button("A*");
+        fringeButton = new Button("Fringe");
+        gbfsButton = new Button("GBFS");
+        ucsButton = new Button("UCS");
         
-        saveButtons.getChildren().addAll(saveTxtButton, savePngButton);
+        aStarButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
+        gbfsButton.setStyle(createButtonStyle(false));
+        ucsButton.setStyle(createButtonStyle(false));
+        
+        // Set size and font for algorithm buttons
+        aStarButton.setPrefWidth(70);
+        aStarButton.setPrefHeight(40);
+        aStarButton.setFont(Font.font("Poly", 12));
+        
+        fringeButton.setPrefWidth(100);
+        fringeButton.setPrefHeight(40);
+        fringeButton.setFont(Font.font("Poly", 12));
+        
+        gbfsButton.setPrefWidth(100);
+        gbfsButton.setPrefHeight(40);
+        gbfsButton.setFont(Font.font("Poly", 12));
+        
+        ucsButton.setPrefWidth(100);
+        ucsButton.setPrefHeight(40);
+        ucsButton.setFont(Font.font("Poly", 12));
 
+        // Disable algorithm buttons initially
+        aStarButton.setDisable(true);
+        fringeButton.setDisable(true);
+        gbfsButton.setDisable(true);
+        ucsButton.setDisable(true);
+
+        algorithmButtons.getChildren().addAll(aStarButton, fringeButton, gbfsButton, ucsButton);
+        VBox.setMargin(algorithmButtons, new Insets(0, 0, 15, 0));
+
+        // Heuristic section
+        Label heuristicLabel = new Label("~ Heuristics ~");
+        heuristicLabel.setFont(Font.font("Poly", 16)); // Increased font size
+        heuristicLabel.setAlignment(Pos.CENTER);
+        
+        HBox heuristicButtons = new HBox(10); // Increased spacing
+        heuristicButtons.setAlignment(Pos.CENTER);
+        
+        distanceButton = new Button("Distance");
+        blockingButton = new Button("Blocking");
+        
+        distanceButton.setStyle(createButtonStyle(false));
+        blockingButton.setStyle(createButtonStyle(false));
+        distanceButton.setDisable(true);
+        blockingButton.setDisable(true);
+        
+        heuristicButtons.getChildren().addAll(distanceButton, blockingButton);
+
+        // Add separator after heuristic section
+        Separator heuristicSeparator = new Separator();
+        heuristicSeparator.setStyle("-fx-background-color: #CCCCCC;");
+        VBox.setMargin(heuristicSeparator, new Insets(10, 0, 10, 0));
+
+        // Solve button
+        solveButton = new Button("Solve");
+        solveButton.setPrefWidth(350);
+        solveButton.setStyle(createButtonStyle(false));
+        solveButton.setDisable(true);
+
+        // Add all sections to sidebar
         sidebar.getChildren().addAll(
             titleSection,
-            inputSection,
-            listsContainer,
             previewLabel,
             previewArea,
-            instructionLabel,
-            saveButtons
+            fileLoadSection,
+            fileSeparator,
+            algorithmLabel,
+            algorithmButtons,
+            heuristicLabel,
+            heuristicButtons,
+            heuristicSeparator,
+            solveButton
         );
 
         sidebarWrapper.getChildren().add(sidebar);
@@ -228,13 +257,106 @@ public class GUI extends Application
         mainContent.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(mainContent, Priority.ALWAYS);
 
-        setupWelcomeView();
+        setupWelcomeView();        
 
-        mainLayout.getChildren().addAll(sidebarWrapper, separator, mainContent);
+        // Create the bottom control section with center alignment
+        HBox bottomControls = new HBox(20);
+        bottomControls.setPadding(new Insets(20));
+        bottomControls.setAlignment(Pos.CENTER); // Centers children horizontally in the HBox
+        bottomControls.setMaxWidth(Double.MAX_VALUE); // Allow HBox to expand to full width of parent
+
+        // Speed slider section
+        VBox speedSection = new VBox(5);
+        speedSection.setAlignment(Pos.CENTER);
+        speedSection.setPrefWidth(300);
+
+        Label speedLabel = new Label("Speed:");
+        speedLabel.setFont(Font.font("Poly", 14)); // Increased font size
+        speedLabel.setAlignment(Pos.CENTER); // Center the label text
+
+        speedSlider = new Slider(0.1, 3.0, 1.0);
+        speedSlider.setShowTickMarks(true);
+        speedSlider.setShowTickLabels(true);
+        speedSlider.setMajorTickUnit(0.5);
+        speedSlider.setMinorTickCount(1);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setDisable(true);
+        speedSlider.setMaxWidth(250); // Constrain slider width
+
+        // Simple styling to match the gray theme and Poly font
+        speedSlider.setStyle(
+            "-fx-control-inner-background: #E0E0E0;" +
+            "-fx-accent: #808080;" +          // Color of the filled track (same as selected buttons)
+            "-fx-font-family: 'Poly';" +
+            "-fx-disabled-opacity: 0.6;"      // Same as your buttons
+        );
+
+        speedSection.getChildren().addAll(speedLabel, speedSlider);
+
+        // Playback controls section with larger buttons
+        HBox playbackControls = new HBox(15); // Increased spacing
+        playbackControls.setAlignment(Pos.CENTER);
+
+        playButton = new Button("▶");
+        pauseButton = new Button("⏸");
+        stopButton = new Button("⏹");
+
+        // Set size and font for playback buttons
+        playButton.setPrefWidth(60);
+        playButton.setPrefHeight(40);
+        playButton.setFont(Font.font("Poly", 8));
+
+        pauseButton.setPrefWidth(60);
+        pauseButton.setPrefHeight(40);
+        pauseButton.setFont(Font.font("Poly", 8));
+
+        stopButton.setPrefWidth(60);
+        stopButton.setPrefHeight(40);
+        stopButton.setFont(Font.font("Poly", 8));
+
+        playButton.setStyle(createButtonStyle(false));
+        pauseButton.setStyle(createButtonStyle(false));
+        stopButton.setStyle(createButtonStyle(false));
+
+        playButton.setDisable(true);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+
+        playbackControls.getChildren().addAll(playButton, pauseButton, stopButton);
+
+        // Save buttons section with larger buttons
+        HBox saveControls = new HBox(15); // Increased spacing
+        saveControls.setAlignment(Pos.CENTER);
+
+        saveTxtButton = new Button("Save .txt");
+
+        saveTxtButton.setPrefWidth(120);
+        saveTxtButton.setPrefHeight(40);
+        saveTxtButton.setFont(Font.font("Poly", 16));
+        saveTxtButton.setStyle(createButtonStyle(false));
+        saveTxtButton.setDisable(true);
+
+        saveControls.getChildren().addAll(saveTxtButton);
+
+        // Add all sections to bottom controls with fixed spacing
+        HBox.setHgrow(speedSection, Priority.ALWAYS);
+        HBox.setHgrow(playbackControls, Priority.ALWAYS);
+        HBox.setHgrow(saveControls, Priority.ALWAYS);
+        bottomControls.getChildren().addAll(speedSection, playbackControls, saveControls);
+
+        // Add the bottom controls to the main layout
+        VBox rightSection = new VBox();
+        rightSection.setAlignment(Pos.CENTER); // Center align VBox contents
+        rightSection.getChildren().addAll(mainContent, bottomControls);
+        VBox.setVgrow(mainContent, Priority.ALWAYS);
+
+        // Ensure the right section takes up all available space
+        HBox.setHgrow(rightSection, Priority.ALWAYS);
+        mainLayout.getChildren().addAll(sidebarWrapper, separator, rightSection);
 
         Scene scene = new Scene(mainLayout);
 
-        // add icon
+        // Add app icon
         try 
         {
             Image icon = new Image(getClass().getResourceAsStream("/images/icon.png"));
@@ -270,8 +392,6 @@ public class GUI extends Application
         stage.show();
 
         setupEventHandlers();
-        
-        loadTestCases();
         
         stage.setOnCloseRequest(new EventHandler<WindowEvent>() 
         {
@@ -346,17 +466,27 @@ public class GUI extends Application
             imageContainer.setPadding(new Insets(20));
             imageContainer.setAlignment(Pos.CENTER);
             
+            Label stepLabel = new Label("Move: " + currentStep + "/" + totalSteps);
+            stepLabel.setFont(Font.font("Poly", 14));
+            
+            Label nodesLabel = new Label("Nodes Explored: " + nodesExplored);
+            nodesLabel.setFont(Font.font("Poly", 14));
+            
             Label timeLabel = new Label("Searching Time: " + searchTime + " ms");
             timeLabel.setFont(Font.font("Poly", 14));
             
-            Label casesLabel = new Label("Nodes Explored: " + nodesExplored);
-            casesLabel.setFont(Font.font("Poly", 14));
-            
             VBox statsContainer = new VBox(10);
             statsContainer.setAlignment(Pos.CENTER);
-            statsContainer.getChildren().addAll(timeLabel, casesLabel);
+            statsContainer.getChildren().addAll(stepLabel, nodesLabel, timeLabel);
             
             mainContent.getChildren().addAll(resultsLabel, imageContainer, statsContainer);
+            
+            // Enable animation controls and save buttons
+            speedSlider.setDisable(false);
+            playButton.setDisable(false);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(false);
+            saveTxtButton.setDisable(false);
             
         } 
         catch (Exception e) 
@@ -390,45 +520,6 @@ public class GUI extends Application
         errorContainer.getChildren().addAll(resultsLabel, errorLabel);
         
         mainContent.getChildren().add(errorContainer);
-        
-        saveTxtButton.setDisable(false);
-        savePngButton.setDisable(true);
-
-        board = new Board(0, 0, 0, 0, 0, null);
-    }
-
-    /**
-     * Load test cases from the ~/test directory.
-     */
-    private void loadTestCases() 
-    {
-        try 
-        {
-            File currentDir = new File(System.getProperty("user.dir"));
-            File testDir = new File(currentDir.getParentFile().getParentFile() + "/test");
-            File[] files = testDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".txt"));
-            
-            if (files != null) 
-            {
-                Arrays.sort(files);
-                for (File file : files) 
-                {
-                    String fileName = file.getName();
-                    if (fileName.endsWith("-output.txt")) 
-                    {
-                        outputFilesList.getItems().add(fileName);
-                    } 
-                    else 
-                    {
-                        testCasesList.getItems().add(fileName);
-                    }
-                }
-            }
-        } 
-        catch (Exception e) 
-        {
-            System.err.println("Error loading test cases: " + e.getMessage());
-        }
     }
 
     /**
@@ -436,46 +527,233 @@ public class GUI extends Application
      */
     private void setupEventHandlers() 
     {
-        findButton.setOnAction(e -> 
-        {
-            String selected = testCaseInput.getText();
-            if (selected.isEmpty()) 
-            {
-                fileName = "invalid-file-1";
-                showErrorView("Filename cannot be empty.");
-                return;
-            }
-            
-            if (selected.endsWith("-output")) {
-                showErrorView("Output files cannot be processed");
-                return;
-            }
-            
-            handleFindButtonClick();
-        });
-    
-        testCasesList.setOnMouseClicked(e -> 
-        {
-            String selected = testCasesList.getSelectionModel().getSelectedItem();
-            if (selected != null) 
-            {
-                testCaseInput.setText(selected.replace(".txt", ""));
-                loadPreview(selected);
-            }
-        });
-    
-        outputFilesList.setOnMouseClicked(e -> 
-        {
-            String selected = outputFilesList.getSelectionModel().getSelectedItem();
-            if (selected != null) 
-            {
-                testCaseInput.setText(selected.replace(".txt", ""));
-                loadPreview(selected);
-            }
-        });
-    
+        // Load button handler
+        loadButton.setOnAction(e -> handleLoadButtonClick());
+        
+        // Algorithm button handlers
+        aStarButton.setOnAction(e -> handleAlgorithmSelection("A*"));
+        fringeButton.setOnAction(e -> handleAlgorithmSelection("Fringe"));
+        gbfsButton.setOnAction(e -> handleAlgorithmSelection("GBFS"));
+        ucsButton.setOnAction(e -> handleAlgorithmSelection("UCS"));
+        
+        // Heuristic button handlers
+        distanceButton.setOnAction(e -> handleHeuristicSelection("Distance"));
+        blockingButton.setOnAction(e -> handleHeuristicSelection("Blocking"));
+        
+        // Solve button handler
+        solveButton.setOnAction(e -> handleSolveButtonClick());
+        
+        // Animation control handlers
+        playButton.setOnAction(e -> handlePlayButtonClick());
+        pauseButton.setOnAction(e -> handlePauseButtonClick());
+        stopButton.setOnAction(e -> handleStopButtonClick());
+        
+        // Save button handlers
         saveTxtButton.setOnAction(e -> handleSaveTxtClick());
-        savePngButton.setOnAction(e -> handleSavePngClick());
+    }
+    
+    /**
+     * Handle the Load button click event.
+     */
+    private void handleLoadButtonClick() 
+    {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open TXT File");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("Text Files", "*.txt")
+        );
+        
+        // Set initial directory to the test folder
+        try {
+            File currentDir = new File(System.getProperty("user.dir"));
+            File testDir = new File(currentDir.getParentFile().getParentFile() + "/test");
+            fileChooser.setInitialDirectory(testDir);
+        } catch (Exception e) {
+            System.err.println("Error setting initial directory: " + e.getMessage());
+        }
+        
+        Stage stage = (Stage) loadButton.getScene().getWindow();
+        File selectedFile = fileChooser.showOpenDialog(stage);
+        
+        if (selectedFile != null) {
+            String filePath = selectedFile.getAbsolutePath();
+            if (filePath.toLowerCase().endsWith(".txt")) {
+                fileName = selectedFile.getName();
+                fileNameLabel.setText(fileName);
+                loadPreview(fileName);
+                
+                // Reset UI state for new file
+                resetUIState();
+                enableAlgorithmButtons();
+            } else {
+                showErrorView("Not .txt file loaded");
+            }
+        }
+    }
+    
+    /**
+     * Handle algorithm selection.
+     * 
+     * @param algorithm Selected algorithm
+     */
+    private void handleAlgorithmSelection(String algorithm) 
+    {
+        selectedAlgorithm = algorithm;
+        
+        // Reset button styles
+        aStarButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
+        gbfsButton.setStyle(createButtonStyle(false));
+        ucsButton.setStyle(createButtonStyle(false));
+        
+        // Highlight selected button
+        switch (algorithm) {
+            case "A*":
+                aStarButton.setStyle(createButtonStyle(true));
+                break;
+            case "Fringe":
+                fringeButton.setStyle(createButtonStyle(true));
+                break;
+            case "GBFS":
+                gbfsButton.setStyle(createButtonStyle(true));
+                break;
+            case "UCS":
+                ucsButton.setStyle(createButtonStyle(true));
+                break;
+        }
+        
+        // Enable or disable heuristic buttons based on algorithm
+        if (algorithm.equals("UCS")) {
+            distanceButton.setDisable(true);
+            blockingButton.setDisable(true);
+            
+            // Reset heuristic selection
+            selectedHeuristic = "";
+            distanceButton.setStyle(createButtonStyle(false));
+            blockingButton.setStyle(createButtonStyle(false));
+            
+            // Enable solve button directly for UCS
+            solveButton.setDisable(false);
+        } else {
+            distanceButton.setDisable(false);
+            blockingButton.setDisable(false);
+            
+            // Check if heuristic is already selected
+            solveButton.setDisable(selectedHeuristic.isEmpty());
+        }
+    }
+    
+    /**
+     * Handle heuristic selection.
+     * 
+     * @param heuristic Selected heuristic
+     */
+    private void handleHeuristicSelection(String heuristic) 
+    {
+        selectedHeuristic = heuristic;
+        
+        // Reset button styles
+        distanceButton.setStyle(createButtonStyle(false));
+        blockingButton.setStyle(createButtonStyle(false));
+        
+        // Highlight selected button
+        switch (heuristic) {
+            case "Distance":
+                distanceButton.setStyle(createButtonStyle(true));
+                break;
+            case "Blocking":
+                blockingButton.setStyle(createButtonStyle(true));
+                break;
+        }
+        
+        // Enable solve button if algorithm is selected
+        solveButton.setDisable(selectedAlgorithm.isEmpty());
+    }
+    
+    /**
+     * Handle the Solve button click event.
+     */
+    private void handleSolveButtonClick() 
+    {
+        // This will be implemented later
+        // For now, just simulate the state change
+        
+        currentStep = 1;
+        totalSteps = 32; // Example value
+        nodesExplored = 69; // Example value
+        searchTime = 2; // Example value in ms
+        
+        // Setup results view with the solution
+        setupResultsView();
+    }
+    
+    /**
+     * Handle the Play button click event.
+     */
+    private void handlePlayButtonClick() 
+    {
+        isPlaying = true;
+        isPaused = false;
+        
+        // Update button states
+        playButton.setDisable(true);
+        pauseButton.setDisable(false);
+        stopButton.setDisable(false);
+        speedSlider.setDisable(true);
+        
+        // Animation playback logic will be implemented later
+    }
+    
+    /**
+     * Handle the Pause button click event.
+     */
+    private void handlePauseButtonClick() 
+    {
+        isPlaying = false;
+        isPaused = true;
+        
+        // Update button states
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(false);
+        speedSlider.setDisable(false);
+        
+        // Animation pause logic will be implemented later
+    }
+    
+    /**
+     * Handle the Stop button click event.
+     */
+    private void handleStopButtonClick() 
+    {
+        isPlaying = false;
+        isPaused = false;
+        
+        // Update button states
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(false);
+        speedSlider.setDisable(false);
+        
+        // Animation stop logic will be implemented later
+    }
+    
+    /**
+     * Handle the Save GIF button click event.
+     */
+    private void handleSaveGifClick() 
+    {
+        // This will be implemented later
+        showInfo("Successfully saved GIF to " + fileName + "-output.gif");
+    }
+    
+    /**
+     * Handle the Save TXT button click event.
+     */
+    private void handleSaveTxtClick() 
+    {
+        // This will be implemented later
+        showInfo("Successfully saved solution to " + fileName + "-output.txt");
     }
 
     /**
@@ -498,79 +776,73 @@ public class GUI extends Application
             previewArea.setText("Error loading preview: " + ex.getMessage());
         }
     }
-
+    
     /**
-     * Handle the "Find!" button click event.
+     * Reset the UI state for a new file.
      */
-    private void handleFindButtonClick() 
+    private void resetUIState() 
     {
-
+        // Reset algorithm selection
+        selectedAlgorithm = "";
+        aStarButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
+        gbfsButton.setStyle(createButtonStyle(false));
+        ucsButton.setStyle(createButtonStyle(false));
+        
+        // Reset heuristic selection
+        selectedHeuristic = "";
+        distanceButton.setStyle(createButtonStyle(false));
+        blockingButton.setStyle(createButtonStyle(false));
+        distanceButton.setDisable(true);
+        blockingButton.setDisable(true);
+        
+        // Disable solve button
+        solveButton.setDisable(true);
+        
+        // Disable animation controls
+        speedSlider.setDisable(true);
+        playButton.setDisable(true);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        
+        // Disable save buttons
+        saveTxtButton.setDisable(true);
+        
+        // Reset animation state
+        isPlaying = false;
+        isPaused = false;
+        
+        // Reset the main content
+        setupWelcomeView();
     }
-
+    
     /**
-     * Handle the "Save .txt" button click event.
+     * Enable algorithm buttons.
      */
-    private void handleSaveTxtClick() 
+    private void enableAlgorithmButtons() 
     {
-        try 
-        {
-            OutputGUI output = new OutputGUI(fileName, board, searchTime, nodesExplored);
-            File txtFile = output.getOutputTextFile();
-
-            if (txtFile.exists()) 
-            {
-                if(output.shouldOverwrite(txtFile))
-                {
-                    txtFile.delete();
-                    output.saveToText();
-                    showInfo("Successfully saved solution to " + fileName + "-output.txt");
-                }
-            }
-            else
-            {
-                output.saveToText();
-                showInfo("Successfully saved solution to " + fileName + "-output.txt");
-            }
-            clearTestCases();
-            loadTestCases();
-        } 
-        catch (Exception e) 
-        {
-            showAlert("Error saving text file: " + e.getMessage());
-        }
+        aStarButton.setDisable(false);
+        fringeButton.setDisable(false);
+        gbfsButton.setDisable(false);
+        ucsButton.setDisable(false);
     }
-
+    
     /**
-     * Handle the "Save .png" button click event.
+     * Create a style string for buttons.
+     * 
+     * @param isSelected Whether the button is selected
+     * @return Button style string
      */
-    private void handleSavePngClick() 
+    private String createButtonStyle(boolean isSelected) 
     {
-        try 
-        {
-            OutputGUI output = new OutputGUI(fileName, board, searchTime, nodesExplored);
-            File pngFile = output.getOutputImageFile();
-
-            if (pngFile.exists())
-            {
-                if(output.shouldOverwrite(pngFile))
-                {   
-                    pngFile.delete();
-                    output.saveToImage();
-                    showInfo("Successfully saved image to " + fileName + "-output.png");
-                }
-            }
-            else
-            {
-                output.saveToImage();
-                showInfo("Successfully saved image to " + fileName + "-output.png");
-            }
-            clearTestCases();
-            loadTestCases();
-        } 
-        catch (Exception e) 
-        {
-            showAlert("Error saving image file: " + e.getMessage());
-        }
+        String backgroundColor = isSelected ? "#808080" : "#E0E0E0";
+        String textColor = isSelected ? "white" : "black";
+        
+        return "-fx-background-color: " + backgroundColor + ";" +
+               "-fx-text-fill: " + textColor + ";" +
+               "-fx-background-radius: 5;" +
+               "-fx-padding: 8 20;" +
+               "-fx-font-family: 'Poly';";
     }
 
     /**
@@ -599,15 +871,6 @@ public class GUI extends Application
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    /**
-     * Clear the test cases list.
-     */
-    private void clearTestCases() 
-    {
-        testCasesList.getItems().clear();
-        outputFilesList.getItems().clear();
     }
 
     /**
