@@ -23,8 +23,15 @@ public class Board {
     private int exitCol;         // Exit column position
     private char[][] grid;       // The game grid
     private List<Car> cars;      // All cars on the board
+    private String exitSide;     // Side of the exit
     private String errorMsg;     // Error message for invalid configurations
     private String[] palette;    // Color palette for cars
+    private Integer currentMovedCarIndex; // Index of the car that is currently being moved (for highlighting)
+    
+    // ANSI color reset code
+    private static final String RESET = "\u001B[0m";
+    // Exit character
+    private static final char EXIT_CHAR = 'K';
     
     /**
      * Constructor for the Board class
@@ -34,16 +41,18 @@ public class Board {
      * @param exitRow Row position of the exit
      * @param exitCol Column position of the exit
      */
-    public Board(int rows, int cols, int numCars, int exitRow, int exitCol, String errorMsg) {
+    public Board(int rows, int cols, int numCars, int exitRow, int exitCol, String exitSide, String errorMsg) {
         this.A        = rows;
         this.B        = cols;
         this.N        = numCars;
         this.exitRow  = exitRow;
         this.exitCol  = exitCol;
+        this.exitSide = exitSide;
         this.grid     = new char[rows][cols];
-        this.cars   = new ArrayList<>();
+        this.cars     = new ArrayList<>();
         this.errorMsg = errorMsg;
         this.palette  = generatePalette();
+        this.currentMovedCarIndex = null;
         
         // Initialize the grid with empty cells
         for (int i = 0; i < rows; i++) {
@@ -100,6 +109,12 @@ public class Board {
      * @return
      */
     public int getExitCol() { return this.exitCol; }
+
+    /**
+     * Get the exit side
+     * @return
+     */
+    public String getExitSide() { return this.exitSide; }
     
     /**
      * Get the error message
@@ -108,8 +123,8 @@ public class Board {
     public String getErrorMsg() { return this.errorMsg; }
 
     /**
-     * Set the error message
-     * @param errorMsg The error message
+     * Check if the board has an error
+     * @return
      */
     public boolean hasError() { return this.errorMsg != null; }
 
@@ -118,6 +133,18 @@ public class Board {
      * @return
      */
     public String[] getPalette() { return this.palette; }
+
+    /**
+     * Get the index of the car that is currently being moved
+     * @return
+     */
+    public Integer getCurrentMovedCarIndex() { return this.currentMovedCarIndex; }
+
+    /**
+     * Set the index of the car that is currently being moved
+     * @param index
+     */
+    public void setCurrentMovedCarIndex(Integer index) { this.currentMovedCarIndex = index; }
 
     /**
      * Creates a deep copy of the current board state
@@ -131,6 +158,7 @@ public class Board {
                                    this.getNumCars(), 
                                    this.getExitRow(), 
                                    this.getExitCol(),
+                                   this.getExitSide(),
                                    this.getErrorMsg());
         
         // Copy the grid
@@ -147,6 +175,7 @@ public class Board {
         newBoard.exitRow  = this.getExitRow();
         newBoard.exitCol  = this.getExitCol();
         newBoard.errorMsg = this.getErrorMsg();
+        newBoard.currentMovedCarIndex = this.currentMovedCarIndex;
         
         return newBoard;
     }
@@ -189,6 +218,7 @@ public class Board {
                         int[] firstLocation = carLocations.get(grid[i][j]).get(0);
                         int[] lastLocation = carLocations.get(grid[i][j]).get(carLocations.get(grid[i][j]).size() - 1);
 
+                        // Island
                         if (carLocations.get(grid[i][j]).size() == 1) 
                         {
                             if (firstLocation[0] != i && firstLocation[1] != j)
@@ -437,11 +467,14 @@ public class Board {
         for (int[] cell : newCells)
             newBoard.grid[cell[0]][cell[1]] = car.getId();
         
+        newBoard.setCurrentMovedCarIndex(carIndex);
+        
         return newBoard;
     }
     
     /**
-     * Get a string representation of the current board state
+     * Get a string representation of the current board state with colored cars
+     * and appropriate exit rendering based on exitSide
      * 
      * @return String representation of the board
      */
@@ -449,13 +482,104 @@ public class Board {
     public String toString() 
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < this.getRows(); i++) 
-        {
-            for (int j = 0; j < this.getCols(); j++)
-                sb.append(grid[i][j]);
-
-            if (i < this.getRows() - 1)
+        
+        if (exitSide != null && exitSide.equalsIgnoreCase("TOP")) {
+            // Add top exit row
+            for (int j = 0; j < this.getCols(); j++) {
+                if (j == exitCol) {
+                    // Get the color for the exit character from palette based on its letter (K)
+                    int exitColorIndex = EXIT_CHAR - 'A';
+                    if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                        sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
+                    } else {
+                        sb.append(EXIT_CHAR);
+                    }
+                } else {
+                    sb.append(' ');
+                }
+            }
+            sb.append("\n");
+        }
+        
+        // Add main board with left/right exits if needed
+        for (int i = 0; i < this.getRows(); i++) {
+            // Add left exit if needed
+            if (exitSide != null && exitSide.equalsIgnoreCase("LEFT") && i == exitRow) {
+                // Get the color for the exit character from palette based on its letter (K)
+                int exitColorIndex = EXIT_CHAR - 'A';
+                if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                    sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
+                } else {
+                    sb.append(EXIT_CHAR);
+                }
+            } else if (exitSide != null && exitSide.equalsIgnoreCase("LEFT")) {
+                sb.append(' ');
+            }
+            
+            // Add the main grid
+            for (int j = 0; j < this.getCols(); j++) {
+                char cell = grid[i][j];
+                
+                if (cell == '.') {
+                    // Empty cell
+                    sb.append(cell);
+                } else {
+                    // If currentMovedCarIndex is null, color all cars
+                    // Otherwise, only color the currently moved car
+                    boolean shouldColor = (currentMovedCarIndex == null) || 
+                                         (currentMovedCarIndex != null && 
+                                          cars.get(currentMovedCarIndex).getId() == cell);
+                    
+                    if (shouldColor) {
+                        // Apply color from palette based on car letter
+                        int colorIndex = cell - 'A';
+                        if (colorIndex >= 0 && colorIndex < palette.length) {
+                            sb.append(palette[colorIndex]).append(cell).append(RESET);
+                        } else {
+                            sb.append(cell);
+                        }
+                    } else {
+                        // No color for other cars when only highlighting the current one
+                        sb.append(cell);
+                    }
+                }
+            }
+            
+            // Add right exit if needed
+            if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT") && i == exitRow) {
+                // Get the color for the exit character from palette based on its letter (K)
+                int exitColorIndex = EXIT_CHAR - 'A';
+                if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                    sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
+                } else {
+                    sb.append(EXIT_CHAR);
+                }
+            } else if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT")) {
+                sb.append(' ');
+            }
+            
+            // Add newline if not the last row
+            if (i < this.getRows() - 1) {
                 sb.append("\n");
+            }
+        }
+        
+        // Add bottom exit row if needed
+        if (exitSide != null && exitSide.equalsIgnoreCase("BOTTOM")) {
+            sb.append("\n");
+            for (int j = 0; j < this.getCols(); j++) {
+                if (j == exitCol) {
+                    // Get the color for the exit character from palette based on its letter (K)
+                    int exitColorIndex = EXIT_CHAR - 'A';
+                    if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                        sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
+                    } else {
+                        sb.append(EXIT_CHAR);
+                    }
+                } else {
+                    sb.append(' ');
+                }
+            }
         }
         
         return sb.toString();
@@ -524,9 +648,9 @@ public class Board {
     {
         String[] palette = 
         {
-            "\u001B[38;2;255;50;50m",    // A: Bright Red (#FF3232)
-            "\u001B[38;2;50;255;50m",    // B: Bright Green (#32FF32)
-            "\u001B[38;2;50;150;255m",   // C: Bright Blue (#3296FF)
+            "\u001B[38;2;50;255;50m",    // A: Bright Green (#32FF32)
+            "\u001B[38;2;200;100;255m",  // B: Light Purple (#C864FF)
+            "\u001B[38;2;255;215;0m",    // C: Gold (#FFD700)
             "\u001B[38;2;255;255;50m",   // D: Bright Yellow (#FFFF32)
             "\u001B[38;2;255;50;255m",   // E: Bright Magenta (#FF32FF)
             "\u001B[38;2;50;255;255m",   // F: Bright Cyan (#32FFFF)
@@ -534,12 +658,12 @@ public class Board {
             "\u001B[38;2;128;255;128m",  // H: Light Green (#80FF80)
             "\u001B[38;2;180;180;255m",  // I: Light Blue (#B4B4FF)
             "\u001B[38;2;255;200;100m",  // J: Light Orange (#FFC864)
-            "\u001B[38;2;200;100;255m",  // K: Light Purple (#C864FF)
+            "\u001B[38;2;50;150;255m",   // K: Bright Blue (#3296FF)
             "\u001B[38;2;100;255;200m",  // L: Light Turquoise (#64FFC8)
             "\u001B[38;2;255;150;150m",  // M: Light Red (#FF9696)
             "\u001B[38;2;150;255;150m",  // N: Pale Green (#96FF96)
             "\u001B[38;2;255;160;122m",  // O: Light Salmon (#FFA07A)
-            "\u001B[38;2;255;215;0m",    // P: Gold (#FFD700)
+            "\u001B[38;2;255;50;50m",    // P: Bright Red (#FF3232)
             "\u001B[38;2;173;255;47m",   // Q: Green Yellow (#ADFF2F)
             "\u001B[38;2;64;224;208m",   // R: Turquoise (#40E0D0)
             "\u001B[38;2;238;130;238m",  // S: Violet (#EE82EE)
