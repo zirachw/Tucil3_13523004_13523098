@@ -9,6 +9,7 @@ import src.ADT.Board;
 import src.Algorithm.AStar;
 import src.Algorithm.GBFS;
 import src.Algorithm.UCS;
+import src.Algorithm.Algorithm;
 import src.IO.Input;
 import src.IO.Output;
 import src.ADT.Car;
@@ -44,7 +45,7 @@ public class CLI {
             if (input.hasError()) 
             {
                 System.out.println(input.getErrorMsg());
-                Board board = new Board(0, 0, 0, 0, 0, input.getErrorMsg());
+                Board board = new Board(0, 0, 0, 0, 0, null, input.getErrorMsg());
                 System.out.println("\n[?] Save the output to a file? (Y/N)");
                 Output.confirmError(fileName, board);
                 System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
@@ -63,7 +64,7 @@ public class CLI {
             if (input.hasError()) 
             {
                 System.out.println(input.getErrorMsg());
-                Board board = new Board(0, 0, 0, 0, 0, input.getErrorMsg());
+                Board board = new Board(0, 0, 0, 0, 0, null, input.getErrorMsg());
                 System.out.println("\n[?] Save the output to a file? (Y/N)");
                 Output.confirmError(fileName, board);
                 System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
@@ -78,7 +79,7 @@ public class CLI {
             if (input.hasError()) 
             {  
                 System.out.println(input.getErrorMsg());
-                Board board = new Board(0, 0, 0, 0, 0, input.getErrorMsg());
+                Board board = new Board(0, 0, 0, 0, 0, null, input.getErrorMsg());
                 System.out.println("\n[?] Save the output to a file? (Y/N)");
                 Output.confirmError(fileName, board);
                 System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
@@ -91,6 +92,7 @@ public class CLI {
                                         input.getNumCars(), 
                                         input.getExitRow(), 
                                         input.getExitCol(), 
+                                        input.getExitSide(),
                                         null);
 
                 board.loadConfiguration(input.getBoardConfig());
@@ -107,34 +109,39 @@ public class CLI {
 
                 System.out.println("[#] Puzzle loaded successfully!");
                 System.out.println("[#] Puzzle configuration:");
-                // System.out.println(board);
                 displayBoardInfo(board, input);
+                System.out.println();
                 
-                String algo = validateOption(scanner, 3);
-                String heuristic;
+                String algoChoice = validateOption(scanner, 3);
+                String heuristic = null;
+                Algorithm algorithm = null;
                 List<int[]> moves;
 
-                switch (algo) 
+                // Create the appropriate algorithm instance
+                switch (algoChoice) 
                 {
                     case "A*":
                         heuristic = validateOption(scanner, 2);
-                        AStar aStar = new AStar(board);
-                        moves = aStar.solve(heuristic);
-                        aStar.displaySolutions(moves);
+                        algorithm = new AStar(board);
                         break;
 
                     case "GBFS":
                         heuristic = validateOption(scanner, 2);
-                        GBFS gbfs = new GBFS(board);
-                        moves = gbfs.solve(heuristic);
-                        gbfs.displaySolutions(moves);
+                        algorithm = new GBFS(board);
                         break;
 
                     case "UCS":
-                        UCS ucs = new UCS(board);
-                        moves = ucs.solve();
-                        ucs.displaySolutions(moves);
+                        // UCS doesn't use a heuristic, but our new interface requires one
+                        // We'll pass a placeholder value that will be ignored
+                        heuristic = "none";  // This will be ignored by UCS
+                        algorithm = new UCS(board);
                         break;
+                }
+
+                // Solve the puzzle and display the solution
+                if (algorithm != null) {
+                    moves = algorithm.solve(heuristic);
+                    algorithm.displayPerState(moves);
                 }
 
                 scanner.close();
@@ -172,8 +179,8 @@ public class CLI {
             {
                 System.out.println("[#] Heuristic selection:");
                 System.out.println();
-                System.out.println("[-] 1. Manhattan Distance Heuristic");
-                System.out.println("[-] 2. Blocking Cars Heuristic");
+                System.out.println("[-] 1. Manhattan Distance");
+                System.out.println("[-] 2. Blocking Cars");
                 System.out.println();   
                 System.out.println("[?] Enter your choice (1 or 2)");
             }
@@ -278,5 +285,4 @@ public class CLI {
                 car.isPrimary() ? " [PRIMARY]" : "");
         }
     }
-
 }
