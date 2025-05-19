@@ -3,19 +3,12 @@ package src.Algorithm;
 import src.ADT.*;
 import java.util.*;
 
-public class AStar {
-    private Board initialBoard;
-    private Set<String> visitedStates;
-    private int nodesExplored;
-    
-    public AStar(Board board) 
-    {
-        this.initialBoard = board;
-        this.visitedStates = new HashSet<>();
-        this.nodesExplored = 0;
-    }
+public class AStar extends Algorithm 
+{
+    public AStar(Board board) { super(board); }
 
-    public List<int[]> solve(String heuristic)
+    @Override
+    public List<int[]> solve(String heuristic) 
     {
         if(heuristic.equals("Blocking")) return solveBlockingCars();
         else if(heuristic.equals("Manhattan")) return solveManhattanDistance();
@@ -29,39 +22,36 @@ public class AStar {
         
         int intialHValue = State.calculateBlockingCarHeuristic(initialBoard);
 
-        String initialBoardStr = State.getBoardStateString(initialBoard);
-        visitedStates.add(initialBoardStr);
+        addToVisited(initialBoard);
 
         queue.add(new State(initialBoard, initialMoves, intialHValue));
         
-        while(!queue.isEmpty()){
+        while(!queue.isEmpty())
+        {
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
             List<int[]> curMoves = curState.getMoves();
 
-            nodesExplored++;
+            incrementNodesExplored();
 
-            if(curBoard.isSolved()){
-                return curMoves;
-            }
+            if(curBoard.isSolved()) return curMoves;
 
             // Set maximum cost limit
             int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
-            if(curMoves.size() > maxCost){
-                continue;
-            }
+            if(curMoves.size() > maxCost) continue;
             
             List<Car> pieces = curBoard.getCars();
-            for(int i = 0; i < pieces.size(); i++)
+            for(int i = 0; i < pieces.size(); i++) 
             {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                for(Integer moveAmount : validMoves){
+                for(Integer moveAmount : validMoves)
+                {
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
-                    String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr)){
-                        visitedStates.add(newBoardStr);
+                    if(!hasBeenVisited(newBoard))
+                    {
+                        addToVisited(newBoard);
                         
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
@@ -76,45 +66,43 @@ public class AStar {
         return new ArrayList<>();
     }
 
-    private List<int[]> solveManhattanDistance() {
+    private List<int[]> solveManhattanDistance() 
+    {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getFValue()));
-
         List<int[]> initialMoves = new ArrayList<>();
         
         int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
 
-        String initialBoardStr = State.getBoardStateString(initialBoard);
-        visitedStates.add(initialBoardStr);
+        addToVisited(initialBoard);
 
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
-        while(!queue.isEmpty()){
+        while(!queue.isEmpty())
+        {
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
             List<int[]> curMoves = curState.getMoves();
 
-            nodesExplored++;
+            incrementNodesExplored();
             
-            if(curBoard.isSolved()){
-                return splitMovesToSteps(curMoves);
-            }
+            if(curBoard.isSolved()) return splitMovesToSteps(curMoves);
 
             int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
-            if(curMoves.size() > maxCost){
-                continue;
-            }
+            if(curMoves.size() > maxCost) continue;
             
             List<Car> pieces = curBoard.getCars();
-            for(int i = 0; i < pieces.size(); i++){
+            for(int i = 0; i < pieces.size(); i++)
+            {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                for(Integer moveAmount : validMoves){
+                for(Integer moveAmount : validMoves)
+                {
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
-                    String newBoardStr = State.getBoardStateString(newBoard);
                     
                     // Check if state has been visited BEFORE adding to queue
-                    if(!visitedStates.contains(newBoardStr)){
-                        visitedStates.add(newBoardStr); // Add to visited immediately
+                    if(!hasBeenVisited(newBoard))
+                    {
+                        addToVisited(newBoard); // Add to visited immediately
                         
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
@@ -127,53 +115,5 @@ public class AStar {
         }
 
         return new ArrayList<>();
-    }
-
-    public void displaySolutions(List<int[]> moves) {
-        if(moves.isEmpty()){
-            System.out.println("No solution found.");
-            return;
-        }
-
-        System.out.println("Solution found with " + nodesExplored + " nodes explored:");
-        System.out.println("Intial board state:");
-        Board firstBoard = initialBoard;
-        System.out.println(firstBoard.toString());
-        System.out.println("Result:");
-        Board resultBoard = initialBoard;
-
-        for(int[] move : moves) 
-        {
-            int pieceIndex = move[0];
-            int moveAmount = move[1];
-            resultBoard = resultBoard.applyMove(pieceIndex, moveAmount);
-            System.out.println("Move piece " + resultBoard.getCars().get(pieceIndex).getId() + " by " + moveAmount);
-            System.out.println(resultBoard.toString());
-        }
-    }
-
-    public static List<int[]> splitMovesToSteps(List<int[]> moves) {
-        List<int[]> steppedMoves = new ArrayList<>();
-        
-        for (int[] move : moves) {
-            int pieceIndex = move[0];
-            int moveAmount = move[1];
-            
-            // Split the move into individual steps of size 1
-            if (moveAmount > 0) {
-                // Positive movement: add moveAmount number of [pieceIndex, 1] moves
-                for (int i = 0; i < moveAmount; i++) {
-                    steppedMoves.add(new int[]{pieceIndex, 1});
-                }
-            } else if (moveAmount < 0) {
-                // Negative movement: add |moveAmount| number of [pieceIndex, -1] moves
-                for (int i = 0; i < Math.abs(moveAmount); i++) {
-                    steppedMoves.add(new int[]{pieceIndex, -1});
-                }
-            }
-            // If moveAmount is 0, we don't add anything (no movement)
-        }
-        
-        return steppedMoves;
     }
 }

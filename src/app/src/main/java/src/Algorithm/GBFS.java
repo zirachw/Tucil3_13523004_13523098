@@ -3,19 +3,11 @@ package src.Algorithm;
 import src.ADT.*;
 import java.util.*;
 
-public class GBFS 
+public class GBFS extends Algorithm 
 {
-    private Board initialBoard;
-    private Set<String> visitedStates;
-    private int nodesExplored;
-    
-    public GBFS(Board board) 
-    {
-        this.initialBoard = board;
-        this.visitedStates = new HashSet<>();
-        this.nodesExplored = 0;
-    }
+    public GBFS(Board board) { super(board); }
 
+    @Override
     public List<int[]> solve(String heuristic)
     {
         if(heuristic.equals("Blocking")) return solveBlockingCars();
@@ -31,33 +23,26 @@ public class GBFS
         int initialHValue = State.calculateBlockingCarHeuristic(initialBoard);
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
-        // int counter = 0;
         while(!queue.isEmpty()){
-            // counter++;
-            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
-            nodesExplored++;
+            incrementNodesExplored();
             if(curBoard.isSolved()) return splitMovesToSteps(curMoves);
 
-            String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)) continue;
-            else visitedStates.add(curBoardStr);
+            if(hasBeenVisited(curBoard)) continue;
+            addToVisited(curBoard);
             
             List<Car> cars = curBoard.getCars();
             for(int i = 0; i < cars.size(); i++)
             {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                // System.out.println("Moving car " + cars.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
-                    String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr))
+                    if(!hasBeenVisited(newBoard))
                     {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
@@ -80,33 +65,26 @@ public class GBFS
         int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
-        // int counter = 0;
         while(!queue.isEmpty()){
-            // counter++;
-            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
-            nodesExplored++;
+            incrementNodesExplored();
             if(curBoard.isSolved()) return curMoves;
 
-            String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)) continue;
-            else visitedStates.add(curBoardStr);
+            if(hasBeenVisited(curBoard)) continue;
+            addToVisited(curBoard);
             
             List<Car> cars = curBoard.getCars();
             for(int i = 0; i < cars.size(); i++)
             {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                // System.out.println("Moving piece " + cars.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
-                    String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr))
+                    if(!hasBeenVisited(newBoard))
                     {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
@@ -119,55 +97,5 @@ public class GBFS
         }
 
         return new ArrayList<>();
-    }
-
-    public void displaySolutions(List<int[]> moves) 
-    {
-        if(moves.isEmpty())
-        {
-            System.out.println("No solution found.");
-            return;
-        }
-
-        System.out.println("Solution found with " + nodesExplored + " nodes explored:");
-        System.out.println("Initial board state:");
-        Board firstBoard = initialBoard;
-        System.out.println(firstBoard.toString());
-        System.out.println("Result:");
-        Board resultBoard = initialBoard;
-        
-        for(int[] move : moves) 
-        {
-            int carIndex = move[0];
-            int moveAmount = move[1];
-            resultBoard = resultBoard.applyMove(carIndex, moveAmount);
-            System.out.println("Move piece " + resultBoard.getCars().get(carIndex).getId() + " by " + moveAmount);
-            System.out.println(resultBoard.toString());
-        }
-    }
-
-    public static List<int[]> splitMovesToSteps(List<int[]> moves) {
-        List<int[]> steppedMoves = new ArrayList<>();
-        
-        for (int[] move : moves) {
-            int pieceIndex = move[0];
-            int moveAmount = move[1];
-            
-            // Split the move into individual steps of size 1
-            if (moveAmount > 0) {
-                // Positive movement: add moveAmount number of [pieceIndex, 1] moves
-                for (int i = 0; i < moveAmount; i++) {
-                    steppedMoves.add(new int[]{pieceIndex, 1});
-                }
-            } else if (moveAmount < 0) {
-                // Negative movement: add |moveAmount| number of [pieceIndex, -1] moves
-                for (int i = 0; i < Math.abs(moveAmount); i++) {
-                    steppedMoves.add(new int[]{pieceIndex, -1});
-                }
-            }
-            // If moveAmount is 0, we don't add anything (no movement)
-        }
-        
-        return steppedMoves;
     }
 }

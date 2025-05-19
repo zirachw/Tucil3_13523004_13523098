@@ -3,20 +3,18 @@ import src.ADT.*;
 
 import java.util.*;
 
-
-public class UCS {
-    private Board initialBoard;
-    private Set<String> visitedStates;
-    private int nodesExplored;
+public class UCS extends Algorithm {
     
-    public UCS(Board board) 
+    public UCS(Board board) { super(board); }
+
+    @Override
+    public List<int[]> solve(String heuristic) 
     {
-        this.initialBoard = board;
-        this.visitedStates = new HashSet<>();
-        this.nodesExplored = 0;
+        // UCS doesn't use heuristics, ignore the parameter
+        return solveUCS();
     }
 
-    public List<int[]> solve() 
+    private List<int[]> solveUCS() 
     {
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getGValue()));
         List<int[]> initialMoves = new ArrayList<>();
@@ -24,33 +22,26 @@ public class UCS {
         // UCS only uses g(n) - the cost from start to current node
         queue.add(new State(initialBoard, initialMoves)); // UCS constructor
         
-        // int counter = 0;
         while(!queue.isEmpty()){
-            // counter++;
-            // System.out.println(counter);
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
-            // System.out.println("Current board state: \n" + curBoard.toString());
             List<int[]> curMoves = curState.getMoves();
 
-            nodesExplored++;
+            incrementNodesExplored();
             if(curBoard.isSolved()) return splitMovesToSteps(curMoves);
 
-            String curBoardStr = State.getBoardStateString(curBoard);
-            if(visitedStates.contains(curBoardStr)) continue;
-            else visitedStates.add(curBoardStr);
+            if(hasBeenVisited(curBoard)) continue;
+            addToVisited(curBoard);
             
             List<Car> pieces = curBoard.getCars();
             for(int i = 0; i < pieces.size(); i++)
             {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                // System.out.println("Moving piece " + pieces.get(i).getId() + " with valid moves: " + validMoves);
                 for(Integer moveAmount : validMoves){
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
-                    String newBoardStr = State.getBoardStateString(newBoard);
                     
-                    if(!visitedStates.contains(newBoardStr))
+                    if(!hasBeenVisited(newBoard))
                     {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
@@ -63,55 +54,5 @@ public class UCS {
         }
 
         return new ArrayList<>();
-    }
-
-    public void displaySolutions(List<int[]> moves) 
-    {
-        if(moves.isEmpty())
-        {
-            System.out.println("No solution found.");
-            return;
-        }
-
-        System.out.println("Solution found with " + nodesExplored + " nodes explored:");
-        System.out.println("Initial board state:");
-        Board firstBoard = initialBoard;
-        System.out.println(firstBoard.toString());
-        System.out.println("Result:");
-        Board resultBoard = initialBoard;
-        
-        for(int[] move : moves) 
-        {
-            int pieceIndex = move[0];
-            int moveAmount = move[1];
-            resultBoard = resultBoard.applyMove(pieceIndex, moveAmount);
-            System.out.println("Move piece " + resultBoard.getCars().get(pieceIndex).getId() + " by " + moveAmount);
-            System.out.println(resultBoard.toString());
-        }
-    }
-
-    public static List<int[]> splitMovesToSteps(List<int[]> moves) {
-        List<int[]> steppedMoves = new ArrayList<>();
-        
-        for (int[] move : moves) {
-            int pieceIndex = move[0];
-            int moveAmount = move[1];
-            
-            // Split the move into individual steps of size 1
-            if (moveAmount > 0) {
-                // Positive movement: add moveAmount number of [pieceIndex, 1] moves
-                for (int i = 0; i < moveAmount; i++) {
-                    steppedMoves.add(new int[]{pieceIndex, 1});
-                }
-            } else if (moveAmount < 0) {
-                // Negative movement: add |moveAmount| number of [pieceIndex, -1] moves
-                for (int i = 0; i < Math.abs(moveAmount); i++) {
-                    steppedMoves.add(new int[]{pieceIndex, -1});
-                }
-            }
-            // If moveAmount is 0, we don't add anything (no movement)
-        }
-        
-        return steppedMoves;
     }
 }
