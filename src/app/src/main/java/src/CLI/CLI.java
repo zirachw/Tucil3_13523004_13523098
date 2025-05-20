@@ -17,8 +17,8 @@ import src.ADT.Car;
 /**
  * CLI class to run the command line interface application.
  */
-public class CLI {
-
+public class CLI 
+{
     /**
      * Main method for the CLI application.
      *
@@ -39,7 +39,6 @@ public class CLI {
             String fileName = scanner.nextLine();
             System.out.println();
 
-            // Validate the filename
             input.validateFilename(fileName);
 
             if (input.hasError()) 
@@ -72,10 +71,8 @@ public class CLI {
                 return;
             }
 
-            // Read the input file
             input.readInput(absolutePath);
 
-            // Validate the input
             if (input.hasError()) 
             {  
                 System.out.println(input.getErrorMsg());
@@ -117,7 +114,6 @@ public class CLI {
                 Algorithm algorithm = null;
                 List<int[]> moves;
 
-                // Create the appropriate algorithm instance
                 switch (algoChoice) 
                 {
                     case "A*":
@@ -131,22 +127,42 @@ public class CLI {
                         break;
 
                     case "UCS":
-                        // UCS doesn't use a heuristic, but our new interface requires one
-                        // We'll pass a placeholder value that will be ignored
-                        heuristic = "none";  // This will be ignored by UCS
+                        heuristic = "none";
                         algorithm = new UCS(board);
                         break;
                 }
 
                 // Solve the puzzle and display the solution
-                if (algorithm != null) {
+                if (algorithm != null) 
+                {
                     moves = algorithm.solve(heuristic);
-                    algorithm.displayPerState(moves);
+                    Output.displayPerState(board,
+                                           algorithm.getNodesExplored(), 
+                                           algorithm.getExecutionTime(), 
+                                           moves);
+                    
+                    // Ask to save the solution after showing it
+                    if (!moves.isEmpty()) 
+                    {
+                        Output.confirmOptionCLI(fileName, 
+                                                board, 
+                                                algorithm.getExecutionTime(), 
+                                                algorithm.getNodesExplored(), 
+                                                moves);
+                    }
+                    else 
+                    {
+                        Board noSol = new Board(0, 0, 0, 0, 0, null, "No solution found.");
+                        System.out.println("\n[?] Save the output to a file? (Y/N)");
+                        Output.confirmError(fileName, noSol);
+                        System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
+                        scanner.close();
+                        return;
+                    }
                 }
 
-                scanner.close();
-                System.out.println("Done!");
                 System.out.println("[#] Thank you for using the Rush Hour Puzzle Solver!\n");
+                scanner.close();
             }
         } 
         catch (IOException e) 
@@ -253,7 +269,8 @@ public class CLI {
      * @param board The board object
      * @param input The input object
      */
-    private static void displayBoardInfo(Board board, Input input) {
+    private static void displayBoardInfo(Board board, Input input) 
+    {
         System.out.println("\n" + "=".repeat(40));
         System.out.println("PUZZLE INFORMATION");
         System.out.println("=".repeat(40));
@@ -269,13 +286,15 @@ public class CLI {
         System.out.println(board.toString());
         
         // Check if already solved
-        if (board.isSolved()) {
+        if (board.isSolved()) 
+        {
             System.out.println("\n✓ Puzzle is already solved!");
             return;
         }
         
         System.out.println("\nCars on the board:");
-        for (int i = 0; i < board.getCars().size(); i++) {
+        for (int i = 0; i < board.getCars().size(); i++) 
+        {
             Car car = board.getCars().get(i);
             System.out.printf("  %d. %c - %s, size %d, at (%d,%d)%s\n", 
                 i + 1, car.getId(),
