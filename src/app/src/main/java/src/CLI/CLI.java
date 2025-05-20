@@ -10,6 +10,7 @@ import src.Algorithm.AStar;
 import src.Algorithm.GBFS;
 import src.Algorithm.UCS;
 import src.Algorithm.Algorithm;
+import src.Algorithm.Fringe;
 import src.IO.Input;
 import src.IO.Output;
 import src.ADT.Car;
@@ -109,7 +110,7 @@ public class CLI
                 displayBoardInfo(board, input);
                 System.out.println();
                 
-                String algoChoice = validateOption(scanner, 3);
+                String algoChoice = validateOption(scanner, 4);
                 String heuristic = null;
                 Algorithm algorithm = null;
                 List<int[]> moves;
@@ -129,6 +130,10 @@ public class CLI
                     case "UCS":
                         heuristic = "none";
                         algorithm = new UCS(board);
+                        break;
+                    case "Fringe":
+                        heuristic = validateOption(scanner, 2);
+                        algorithm = new Fringe(board);
                         break;
                 }
 
@@ -181,15 +186,16 @@ public class CLI
         
         while (!valid) 
         {
-            if (numOptions == 3)
+            if (numOptions == 4)
             {
                 System.out.println("[#] Algorithm selection:");
                 System.out.println();
                 System.out.println("[-] 1. A* Algorithm");
                 System.out.println("[-] 2. Greedy Best First Search (GBFS)");
                 System.out.println("[-] 3. Uniform Cost Search (UCS)");
+                System.out.println("[-] 4. Fringe Search");
                 System.out.println();
-                System.out.println("[?] Enter your choice (1, 2, or 3)");
+                System.out.println("[?] Enter your choice (1, 2, 3, or 4)");
             }
             else
             {
@@ -231,7 +237,7 @@ public class CLI
             else
             {
                 valid = true;
-                if (numOptions == 3)
+                if (numOptions == 4)
                 {
                     switch (option) 
                     {
@@ -243,6 +249,9 @@ public class CLI
                             break;
                         case 3:
                             algo = "UCS";
+                            break;
+                        case 4:
+                            algo = "Fringe";
                             break;
                     }
                 }
