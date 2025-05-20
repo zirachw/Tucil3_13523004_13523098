@@ -37,76 +37,22 @@ public class Car
         this.orientation = orientation;
     }
 
-    /**
-     * Get the character identifier of the car
-     * @return The character identifier
-     */
     public char getId() { return this.id; }
-
-    /**
-     * Set the character identifier of the car
-     * @param id The character identifier
-     */
     public void setId(char id) { this.id = id; }
 
-    /**
-     * Get the starting row position of the car
-     * @return The starting row position
-     */
     public int getStartRow() { return this.startRow; }
-
-    /**
-     * Set the starting row position of the car
-     * @param row The starting row position
-     */
     public void setStartRow(int row) { this.startRow = row; }
 
-    /**
-     * Get the starting column position of the car
-     * @return The starting column position
-     */
     public int getStartCol() { return this.startCol; }
-
-    /**
-     * Set the starting column position of the car
-     * @param col The starting column position
-     */
     public void setStartCol(int col) { this.startCol = col; }
 
-    /**
-     * Get the length of the car
-     * @return The length of the car
-     */
     public int getLength() { return this.length; }
-
-    /**
-     * Set the length of the car
-     * @param length The length of the car
-     */
     public void setLength(int length) { this.length = length; }
 
-    /**
-     * Check if the car is primary
-     * @return true if primary, false otherwise
-     */
     public boolean isPrimary() { return this.isPrimary; }
-
-    /**
-     * Set if the car is primary
-     * @param isPrimary true if primary, false otherwise
-     */
     public void setPrimary(boolean isPrimary) { this.isPrimary = isPrimary; }
-
-    /**
-     * Get the orientation of the car
-     * @return 1 for horizontal, 0 for vertical
-     */
+    
     public int getOrientation() { return this.orientation; }
-
-    /**
-     * Set the orientation of the car
-     * @param orientation 1 for horizontal, 0 for vertical
-     */
     public void setOrientation(int orientation) { this.orientation = orientation; }
 
     /**

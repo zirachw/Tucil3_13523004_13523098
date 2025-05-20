@@ -2,8 +2,10 @@ package src.ADT;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Class representing the game board for the Rush Hour puzzle.
@@ -14,34 +16,39 @@ public class Board {
     public static final int UNKNOWN    = -1;
     public static final int VERTICAL   = 0;
     public static final int HORIZONTAL = 1;
+    private static final char EXIT_CHAR = 'K';
+    private static final String RESET = "\u001B[0m";
 
     // Attributes
-    private int A;               // Number of rows in the board
-    private int B;               // Number of columns in the board
-    private int N;               // Number of cars on the board
-    private int exitRow;         // Exit row position
-    private int exitCol;         // Exit column position
-    private char[][] grid;       // The game grid
-    private List<Car> cars;      // All cars on the board
-    private String exitSide;     // Side of the exit
-    private String errorMsg;     // Error message for invalid configurations
-    private String[] palette;    // Color palette for cars
+    private int A;                        // Number of rows in the board
+    private int B;                        // Number of columns in the board
+    private int N;                        // Number of cars on the board
+    private int exitRow;                  // Exit row position
+    private int exitCol;                  // Exit column position
+    private char[][] grid;                // The game grid
+    private List<Car> cars;               // All cars on the board
+    private String exitSide;              // Side of the exit
+    private String errorMsg;              // Error message for invalid configurations
+    private String[] palette;             // Color palette for cars
     private Integer currentMovedCarIndex; // Index of the car that is currently being moved (for highlighting)
-    
-    // ANSI color reset code
-    private static final String RESET = "\u001B[0m";
-    // Exit character
-    private static final char EXIT_CHAR = 'K';
     
     /**
      * Constructor for the Board class
+     * 
      * @param rows Number of rows in the board
      * @param cols Number of columns in the board
      * @param numCars Number of cars on the board
      * @param exitRow Row position of the exit
      * @param exitCol Column position of the exit
      */
-    public Board(int rows, int cols, int numCars, int exitRow, int exitCol, String exitSide, String errorMsg) {
+    public Board(int rows, 
+                 int cols, 
+                 int numCars, 
+                 int exitRow, 
+                 int exitCol, 
+                 String exitSide, 
+                 String errorMsg) 
+    {
         this.A        = rows;
         this.B        = cols;
         this.N        = numCars;
@@ -55,95 +62,24 @@ public class Board {
         this.currentMovedCarIndex = null;
         
         // Initialize the grid with empty cells
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int i = 0; i < rows; i++)
+            for (int j = 0; j < cols; j++)
                 grid[i][j] = '.';
-            }
-        }
     }
     
-    /**
-     * Get the rows of the board
-     * @return
-     */
     public int getRows() { return this.A; }
-    
-    /**
-     * Get the columns of the board
-     * @return
-     */
     public int getCols() { return this.B; }
-
-    /**
-     * Get the number of cars on the board
-     * @return
-     */
     public int getNumCars() { return this.N; }
-    
-    /**
-     * Get the grid of the board
-     * @return
-     */
     public char[][] getGrid() { return this.grid; }
-
-    /**
-     * Get the element of the grid at a specific position
-     * @return
-     */
     public char getElement(int i, int j) { return this.grid[i][j]; }
-    
-    /**
-     * Get the cars on the board
-     * @return
-     */
     public List<Car> getCars() { return this.cars; }
-    
-    /**
-     * Get the exit row position
-     * @return
-     */
     public int getExitRow() { return this.exitRow; }
-    
-    /**
-     * Get the exit column position
-     * @return
-     */
     public int getExitCol() { return this.exitCol; }
-
-    /**
-     * Get the exit side
-     * @return
-     */
     public String getExitSide() { return this.exitSide; }
-    
-    /**
-     * Get the error message
-     * @return
-     */
     public String getErrorMsg() { return this.errorMsg; }
-
-    /**
-     * Check if the board has an error
-     * @return
-     */
     public boolean hasError() { return this.errorMsg != null; }
-
-    /** 
-     * Get the color palette for the cars
-     * @return
-     */
     public String[] getPalette() { return this.palette; }
-
-    /**
-     * Get the index of the car that is currently being moved
-     * @return
-     */
     public Integer getCurrentMovedCarIndex() { return this.currentMovedCarIndex; }
-
-    /**
-     * Set the index of the car that is currently being moved
-     * @param index
-     */
     public void setCurrentMovedCarIndex(Integer index) { this.currentMovedCarIndex = index; }
 
     /**
@@ -181,132 +117,6 @@ public class Board {
     }
     
     /**
-     * Load a board configuration from a 2D character array
-     * 
-     * @param config The board configuration
-     * @return True if successful, false otherwise
-     */
-    public void loadConfiguration(ArrayList<String> boardConfig) 
-    {
-        char[][] config = new char[this.getRows()][this.getCols()];
-
-        for (int i = 0; i < this.getRows(); i++) 
-            config[i] = boardConfig.get(i).toCharArray();
-        
-        // Extract cars from the grid
-        Map<Character, ArrayList<int[]>> carLocations = new HashMap<>();
-        boolean foundPrimary = false;
-
-        for (int i = 0; i < this.getRows(); i++) 
-        {
-            for (int j = 0; j < this.getCols(); j++) 
-            {
-                grid[i][j] = config[i][j];
-
-                if (grid[i][j] != '.') 
-                {
-                    // If the car is not already in the map, add it
-                    if (!carLocations.containsKey(grid[i][j]))
-                    {
-                        carLocations.put(grid[i][j], new ArrayList<int []>());
-                        carLocations.get(grid[i][j]).add(new int[]{i, j, UNKNOWN});
-                        
-                        if (grid[i][j] == 'P') foundPrimary = true;
-                    }
-                    else
-                    {
-                        int[] firstLocation = carLocations.get(grid[i][j]).get(0);
-                        int[] lastLocation = carLocations.get(grid[i][j]).get(carLocations.get(grid[i][j]).size() - 1);
-
-                        // Island
-                        if (carLocations.get(grid[i][j]).size() == 1) 
-                        {
-                            if (firstLocation[0] != i && firstLocation[1] != j)
-                            {
-                                this.errorMsg = "Found duplicate car " + grid[i][j] + " at (" + i + ", " + j + 
-                                                ") and (" + firstLocation[0] + ", " + firstLocation[1] + ")";
-                                return;
-                            }
-                            else if (firstLocation[0] == i && firstLocation[1] == j - 1)
-                            {
-                                carLocations.get(grid[i][j]).get(0)[2] = HORIZONTAL;
-                                carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
-                            }
-                            else if (firstLocation[0] == i - 1 && firstLocation[1] == j)
-                            {
-                                carLocations.get(grid[i][j]).get(0)[2] = VERTICAL;
-                                carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
-                            }
-                        }
-                        else
-                        {
-                            if (firstLocation[0] == i && lastLocation[1] == j - 1 && firstLocation[2] == HORIZONTAL)
-                            {
-                                carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
-                            }
-                            else if (lastLocation[0] == i - 1 && firstLocation[1] == j && lastLocation[2] == VERTICAL)
-                            {
-                                carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
-                            }
-
-                            if (grid[i][j] == 'P')
-                            {
-                                if (firstLocation[2] == HORIZONTAL && i != exitRow)
-                                {
-                                    this.errorMsg = "Primary car is not at the exit row";
-                                    return;
-                                }
-                                else if (firstLocation[2] == VERTICAL && j != exitCol)
-                                {
-                                    this.errorMsg = "Primary car is not at the exit column";
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Process all cars
-        for (Map.Entry<Character, ArrayList<int[]>> entry : carLocations.entrySet()) 
-        {
-            char id = entry.getKey();
-            ArrayList<int[]> locations = entry.getValue();
-            
-            boolean isPrimary = (id == 'P');
-            int size = locations.size();
-            
-            // Determine orientation
-            int orientation = (locations.get(0)[2] == HORIZONTAL) ? HORIZONTAL : VERTICAL;
-            int startRow = locations.get(0)[0];
-            int startCol = locations.get(0)[1];
-            
-            // Create the car
-            Car car = new Car(id, startRow, startCol, size, isPrimary, orientation);
-            this.cars.add(car);
-        }
-
-        if (!foundPrimary) 
-        {
-            this.errorMsg = "No primary car found on the board";
-            return;
-        }
-        
-        if (carLocations.size() - 1 < this.getNumCars())
-        {
-            this.errorMsg = "There are too few cars. Expected " + N + " but found " + (carLocations.size() - 1);
-            return;
-        }
-
-        if (carLocations.size() - 1 > this.getNumCars())
-        {
-            this.errorMsg = "There are too many cars. Expected " + N + " but found " + (carLocations.size() - 1);
-            return;
-        }
-    }
-    
-    /**
      * Check if the board is in a solved state (primary car at exit)
      * 
      * @return True if solved, false otherwise
@@ -321,18 +131,21 @@ public class Board {
         int endRow = startRow + (primaryCar.getOrientation() == VERTICAL ? primaryCar.getLength() - 1 : 0);
         int endCol = startCol + (primaryCar.getOrientation() == HORIZONTAL ? primaryCar.getLength() - 1 : 0);
         
-        if (primaryCar.getOrientation() == HORIZONTAL) {
-            if (exitCol == this.getCols() - 1) {
+        if (primaryCar.getOrientation() == HORIZONTAL) 
+        {
+            if (exitCol == this.getCols() - 1)
                 return (endCol == this.getCols() - 1) && (startRow == exitRow);
-            } else if (exitCol == 0) {
+            
+            else if (exitCol == 0)
                 return (startCol == 0) && (startRow == exitRow);
-            }
-        } else {
-            if (exitRow == this.getRows()-1) {
+        } 
+        else 
+        {
+            if (exitRow == this.getRows()-1)
                 return (endRow == this.getRows()-1) && (startCol == exitCol);
-            } else if (exitRow == 0) {
+            
+            else if (exitRow == 0)
                 return (startRow == 0) && (startCol == exitCol);
-            }
         }
         
         return false;
@@ -473,6 +286,198 @@ public class Board {
     }
     
     /**
+     * Load a board configuration from a 2D character array
+     * 
+     * @param boardConfig The board configuration as ArrayList of strings
+     */
+    public void loadConfiguration(ArrayList<String> boardConfig) 
+    {
+        char[][] config = new char[this.getRows()][this.getCols()];
+
+        for (int i = 0; i < this.getRows(); i++) 
+            config[i] = boardConfig.get(i).toCharArray();
+        
+        // Extract cars from the grid
+        Map<Character, ArrayList<int[]>> carLocations = new HashMap<>();
+        boolean foundPrimary = false;
+
+        for (int i = 0; i < this.getRows(); i++) 
+        {
+            for (int j = 0; j < this.getCols(); j++) 
+            {
+                grid[i][j] = config[i][j];
+
+                if (grid[i][j] != '.') 
+                {
+                    // If the car is not already in the map, add it
+                    if (!carLocations.containsKey(grid[i][j]))
+                    {
+                        carLocations.put(grid[i][j], new ArrayList<int[]>());
+                        carLocations.get(grid[i][j]).add(new int[]{i, j, UNKNOWN});
+                        
+                        if (grid[i][j] == 'P') foundPrimary = true;
+                    }
+                    else
+                    {
+                        int[] firstLocation = carLocations.get(grid[i][j]).get(0);
+                        int[] lastLocation = carLocations.get(grid[i][j]).get(carLocations.get(grid[i][j]).size() - 1);
+                        
+                        if (carLocations.get(grid[i][j]).size() == 1) 
+                        {
+                            if ((firstLocation[0] != i || firstLocation[1] != j - 1) && 
+                                (firstLocation[0] != i - 1 || firstLocation[1] != j))
+                            {
+                                this.errorMsg = "Found duplicate car " + grid[i][j];
+                                return;
+                            }
+                            else if (firstLocation[0] == i && firstLocation[1] == j - 1)
+                            {
+                                carLocations.get(grid[i][j]).get(0)[2] = HORIZONTAL;
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
+                            }
+                            else if (firstLocation[0] == i - 1 && firstLocation[1] == j)
+                            {
+                                carLocations.get(grid[i][j]).get(0)[2] = VERTICAL;
+                                carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
+                            }
+                        }
+                        else
+                        {
+                            // For cars with 2+ segments, check if the new piece aligns with existing orientation
+                            int orientation = firstLocation[2];
+                            
+                            if (orientation == HORIZONTAL)
+                            {
+                                // For horizontal cars, must be in same row and adjacent column
+                                if (firstLocation[0] == i && lastLocation[1] == j - 1)
+                                {
+                                    carLocations.get(grid[i][j]).add(new int[]{i, j, HORIZONTAL});
+                                }
+                                else
+                                {
+                                    this.errorMsg = "Car " + grid[i][j] + " has invalid shape";
+                                    return;
+                                }
+                            }
+                            else if (orientation == VERTICAL)
+                            {
+                                // For vertical cars, must be in same column and adjacent row
+                                if (lastLocation[0] == i - 1 && firstLocation[1] == j)
+                                {
+                                    carLocations.get(grid[i][j]).add(new int[]{i, j, VERTICAL});
+                                }
+                                else
+                                {
+                                    this.errorMsg = "Car " + grid[i][j] + " has invalid shape";
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Process all cars and create Car objects
+        for (Map.Entry<Character, ArrayList<int[]>> entry : carLocations.entrySet()) 
+        {
+            char id = entry.getKey();
+            ArrayList<int[]> locations = entry.getValue();
+            
+            boolean isPrimary = (id == 'P');
+            int size = locations.size();
+            
+            // Determine orientation
+            int orientation = (locations.get(0)[2] == HORIZONTAL) ? HORIZONTAL : VERTICAL;
+            int startRow = locations.get(0)[0];
+            int startCol = locations.get(0)[1];
+            
+            // Create the car
+            Car car = new Car(id, startRow, startCol, size, isPrimary, orientation);
+            this.cars.add(car);
+        }
+
+        if (!foundPrimary) 
+        {
+            this.errorMsg = "No primary car found on the board";
+            return;
+        }
+        
+        if (carLocations.size() - 1 < this.getNumCars())
+        {
+            this.errorMsg = "There are too few cars. Expected " + N + " but found " + (carLocations.size() - 1);
+            return;
+        }
+
+        if (carLocations.size() - 1 > this.getNumCars())
+        {
+            this.errorMsg = "There are too many cars. Expected " + N + " but found " + (carLocations.size() - 1);
+            return;
+        }
+        
+        // Validate the primary car's position relative to the exit
+        if (foundPrimary) 
+        {
+            ArrayList<int[]> primaryLocations = carLocations.get('P');
+            if (primaryLocations != null && !primaryLocations.isEmpty()) 
+            {
+                int orientation = primaryLocations.get(0)[2];
+                
+                // For LEFT or RIGHT exits, the primary car must be HORIZONTAL and in the exit row
+                if (exitSide.equals("LEFT") || exitSide.equals("RIGHT")) 
+                {
+                    if (orientation != HORIZONTAL)
+                    {
+                        this.errorMsg = "Unsolvable: Primary car must be horizontal for left/right exits";
+                        return;
+                    }
+                    
+                    boolean isInExitRow = false;
+                    for (int[] location : primaryLocations) 
+                    {
+                        if (location[0] == exitRow) 
+                        {
+                            isInExitRow = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isInExitRow) 
+                    {
+                        this.errorMsg = "Unsolvable: Primary car is not in the same row as the exit";
+                        return;
+                    }
+                }
+                // For TOP or BOTTOM exits, the primary car must be VERTICAL and in the exit column
+                else if (exitSide.equals("TOP") || exitSide.equals("BOTTOM")) 
+                {
+                    if (orientation != VERTICAL) 
+                    {
+                        this.errorMsg = "Unsolvable: Primary car must be vertical for top/bottom exits";
+                        return;
+                    }
+                    
+                    boolean isInExitColumn = false;
+                    for (int[] location : primaryLocations) 
+                    {
+                        if (location[1] == exitCol) 
+                        {
+                            isInExitColumn = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isInExitColumn) 
+                    {
+                        this.errorMsg = "Unsolvable: Primary car is not in the same column as the exit";
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Get a string representation of the current board state with colored cars
      * and appropriate exit rendering based on exitSide
      * 
@@ -483,102 +488,94 @@ public class Board {
     {
         StringBuilder sb = new StringBuilder();
         
-        if (exitSide != null && exitSide.equalsIgnoreCase("TOP")) {
-            // Add top exit row
-            for (int j = 0; j < this.getCols(); j++) {
-                if (j == exitCol) {
-                    // Get the color for the exit character from palette based on its letter (K)
+        if (exitSide != null && exitSide.equalsIgnoreCase("TOP")) 
+        {
+            // Case: Top exit
+            for (int j = 0; j < this.getCols(); j++) 
+            {
+                if (j == exitCol) 
+                {
                     int exitColorIndex = EXIT_CHAR - 'A';
-                    if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                    if (exitColorIndex >= 0 && exitColorIndex < palette.length)
                         sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
-                    } else {
-                        sb.append(EXIT_CHAR);
-                    }
-                } else {
-                    sb.append(' ');
-                }
+                    
+                    else sb.append(EXIT_CHAR);
+                } 
+                else sb.append(' ');
             }
             sb.append("\n");
         }
         
-        // Add main board with left/right exits if needed
-        for (int i = 0; i < this.getRows(); i++) {
-            // Add left exit if needed
-            if (exitSide != null && exitSide.equalsIgnoreCase("LEFT") && i == exitRow) {
-                // Get the color for the exit character from palette based on its letter (K)
+        for (int i = 0; i < this.getRows(); i++) 
+        {
+            // Case: Left exit
+            if (exitSide != null && 
+                exitSide.equalsIgnoreCase("LEFT") && 
+                i == exitRow) 
+            {
                 int exitColorIndex = EXIT_CHAR - 'A';
-                if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                if (exitColorIndex >= 0 && exitColorIndex < palette.length)
                     sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
-                } else {
-                    sb.append(EXIT_CHAR);
-                }
-            } else if (exitSide != null && exitSide.equalsIgnoreCase("LEFT")) {
+                
+                else sb.append(EXIT_CHAR);
+            } 
+            else if (exitSide != null && exitSide.equalsIgnoreCase("LEFT"))
                 sb.append(' ');
-            }
             
             // Add the main grid
-            for (int j = 0; j < this.getCols(); j++) {
+            for (int j = 0; j < this.getCols(); j++) 
+            {
                 char cell = grid[i][j];
                 
-                if (cell == '.') {
-                    // Empty cell
-                    sb.append(cell);
-                } else {
-                    // If currentMovedCarIndex is null, color all cars
-                    // Otherwise, only color the currently moved car
+                if (cell == '.') sb.append(cell);
+                else 
+                {
                     boolean shouldColor = (currentMovedCarIndex == null) || 
                                          (currentMovedCarIndex != null && 
                                           cars.get(currentMovedCarIndex).getId() == cell);
                     
-                    if (shouldColor) {
-                        // Apply color from palette based on car letter
+                    if (shouldColor) 
+                    {
                         int colorIndex = cell - 'A';
-                        if (colorIndex >= 0 && colorIndex < palette.length) {
+                        if (colorIndex >= 0 && colorIndex < palette.length)
                             sb.append(palette[colorIndex]).append(cell).append(RESET);
-                        } else {
-                            sb.append(cell);
-                        }
-                    } else {
-                        // No color for other cars when only highlighting the current one
-                        sb.append(cell);
-                    }
+
+                        else sb.append(cell);
+                    } 
+                    else sb.append(cell);
                 }
             }
             
-            // Add right exit if needed
-            if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT") && i == exitRow) {
-                // Get the color for the exit character from palette based on its letter (K)
+            // Case: Right exit
+            if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT") && i == exitRow) 
+            {
                 int exitColorIndex = EXIT_CHAR - 'A';
-                if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                if (exitColorIndex >= 0 && exitColorIndex < palette.length)
                     sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
-                } else {
-                    sb.append(EXIT_CHAR);
-                }
-            } else if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT")) {
+
+                else sb.append(EXIT_CHAR);
+            } 
+            else if (exitSide != null && exitSide.equalsIgnoreCase("RIGHT"))
                 sb.append(' ');
-            }
             
-            // Add newline if not the last row
-            if (i < this.getRows() - 1) {
-                sb.append("\n");
-            }
+            if (i < this.getRows() - 1) sb.append("\n");
         }
         
-        // Add bottom exit row if needed
-        if (exitSide != null && exitSide.equalsIgnoreCase("BOTTOM")) {
+        // Case: Bottom exit
+        if (exitSide != null && exitSide.equalsIgnoreCase("BOTTOM")) 
+        {
             sb.append("\n");
-            for (int j = 0; j < this.getCols(); j++) {
-                if (j == exitCol) {
-                    // Get the color for the exit character from palette based on its letter (K)
+            for (int j = 0; j < this.getCols(); j++) 
+            {
+                if (j == exitCol) 
+                {
                     int exitColorIndex = EXIT_CHAR - 'A';
-                    if (exitColorIndex >= 0 && exitColorIndex < palette.length) {
+                    if (exitColorIndex >= 0 && exitColorIndex < palette.length)
                         sb.append(palette[exitColorIndex]).append(EXIT_CHAR).append(RESET);
-                    } else {
-                        sb.append(EXIT_CHAR);
-                    }
-                } else {
-                    sb.append(' ');
-                }
+                    
+                    else sb.append(EXIT_CHAR);
+                } 
+                else sb.append(' ');
             }
         }
         
