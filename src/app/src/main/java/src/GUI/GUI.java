@@ -1,6 +1,8 @@
 package src.GUI;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -8,68 +10,63 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
 import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.text.Text;
 import javafx.stage.WindowEvent;
 import javafx.event.EventHandler;
-import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.stage.FileChooser;
 
+import javafx.stage.Stage;
 import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 import src.ADT.Board;
+import src.Algorithm.AStar;
+import src.Algorithm.GBFS;
+import src.Algorithm.UCS;
+import src.Algorithm.Algorithm;
+import src.IO.Input;
 
 /**
  * JavaFX GUI application for the Rush Hour Puzzle Solver.
  */
 public class GUI extends Application 
 {
-    // Algorithm buttons
     private Button aStarButton;
-    private Button fringeButton;
     private Button gbfsButton;
     private Button ucsButton;
-    
-    // Heuristic buttons
     private Button distanceButton;
     private Button blockingButton;
-    
-    // Control buttons
     private Button loadButton;
     private Button solveButton;
-    
-    // Animation control buttons
     private Button playButton;
     private Button pauseButton;
     private Button stopButton;
-    
-    // Save button
     private Button saveTxtButton;
     
-    // Speed slider
     private Slider speedSlider;
-    
-    // Text elements
     private Label fileNameLabel;
     private TextArea previewArea;
     private VBox mainContent;
+    private Text stepCountText;
     
-    // State variables
-    private String fileName = "~";
     private long searchTime;
     private int nodesExplored;
     private int currentStep;
     private int totalSteps;
     private Board board;
-    
-    // Algorithm and heuristic selection
+    private Input inputParser;
+    private List<int[]> moves;
+    private Pane boardPane;
+    private Animation animation;
+
     private String selectedAlgorithm = "";
     private String selectedHeuristic = "";
-    
-    // Animation state
+    private String inputFilePath = "";
+    private String fileName = "-";
+
     private boolean isPlaying = false;
     private boolean isPaused = false;
 
@@ -101,11 +98,11 @@ public class GUI extends Application
 
         VBox sidebarWrapper = new VBox();
         sidebarWrapper.setAlignment(Pos.CENTER);
-        sidebarWrapper.setPrefWidth(400); // Increased sidebar width
+        sidebarWrapper.setPrefWidth(400);
         VBox.setVgrow(sidebarWrapper, Priority.ALWAYS);
 
         VBox sidebar = new VBox(20);
-        sidebar.setPadding(new Insets(25)); // Increased padding
+        sidebar.setPadding(new Insets(25));
         sidebar.setStyle("-fx-background-color: white;");
         sidebar.setAlignment(Pos.TOP_CENTER);
         sidebar.setMaxHeight(Region.USE_PREF_SIZE);
@@ -115,19 +112,19 @@ public class GUI extends Application
         titleSection.setAlignment(Pos.CENTER);
         
         Label title = new Label("Rush Hour Puzzle Solver");
-        title.setFont(Font.font("Poly", 28)); // Increased font size
+        title.setFont(Font.font("Poly", 28));
         
         titleSection.getChildren().addAll(title);
-        VBox.setMargin(titleSection, new Insets(0, 0, 10, 0)); // Increased margin
+        VBox.setMargin(titleSection, new Insets(0, 0, 10, 0));
 
         // Preview section
         Label previewLabel = new Label("~ Preview ~");
-        previewLabel.setFont(Font.font("Poly", 18)); // Increased font size
+        previewLabel.setFont(Font.font("Poly", 18));
         previewLabel.setAlignment(Pos.CENTER);
         
         previewArea = new TextArea();
         previewArea.setPrefHeight(220);
-        previewArea.setPrefWidth(350); // Increased width
+        previewArea.setPrefWidth(350);
         previewArea.setEditable(false);
         previewArea.setWrapText(true);
         previewArea.setFont(Font.font("Monospace", 12));
@@ -159,19 +156,17 @@ public class GUI extends Application
 
         // Algorithm section
         Label algorithmLabel = new Label("~ Algorithm ~");
-        algorithmLabel.setFont(Font.font("Poly", 16)); // Increased font size
+        algorithmLabel.setFont(Font.font("Poly", 16));
         algorithmLabel.setAlignment(Pos.CENTER);
         
-        HBox algorithmButtons = new HBox(10); // Increased spacing
+        HBox algorithmButtons = new HBox(10);
         algorithmButtons.setAlignment(Pos.CENTER);
         
         aStarButton = new Button("A*");
-        fringeButton = new Button("Fringe");
         gbfsButton = new Button("GBFS");
         ucsButton = new Button("UCS");
         
         aStarButton.setStyle(createButtonStyle(false));
-        fringeButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
         
@@ -179,10 +174,6 @@ public class GUI extends Application
         aStarButton.setPrefWidth(70);
         aStarButton.setPrefHeight(40);
         aStarButton.setFont(Font.font("Poly", 12));
-        
-        fringeButton.setPrefWidth(100);
-        fringeButton.setPrefHeight(40);
-        fringeButton.setFont(Font.font("Poly", 12));
         
         gbfsButton.setPrefWidth(100);
         gbfsButton.setPrefHeight(40);
@@ -194,19 +185,18 @@ public class GUI extends Application
 
         // Disable algorithm buttons initially
         aStarButton.setDisable(true);
-        fringeButton.setDisable(true);
         gbfsButton.setDisable(true);
         ucsButton.setDisable(true);
 
-        algorithmButtons.getChildren().addAll(aStarButton, fringeButton, gbfsButton, ucsButton);
+        algorithmButtons.getChildren().addAll(aStarButton, gbfsButton, ucsButton);
         VBox.setMargin(algorithmButtons, new Insets(0, 0, 15, 0));
 
         // Heuristic section
         Label heuristicLabel = new Label("~ Heuristics ~");
-        heuristicLabel.setFont(Font.font("Poly", 16)); // Increased font size
+        heuristicLabel.setFont(Font.font("Poly", 16));
         heuristicLabel.setAlignment(Pos.CENTER);
         
-        HBox heuristicButtons = new HBox(10); // Increased spacing
+        HBox heuristicButtons = new HBox(10);
         heuristicButtons.setAlignment(Pos.CENTER);
         
         distanceButton = new Button("Distance");
@@ -257,13 +247,24 @@ public class GUI extends Application
         mainContent.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(mainContent, Priority.ALWAYS);
 
-        setupWelcomeView();        
+        // Initialize animation
+        boardPane = new Pane();
+        boardPane.setPrefSize(600, 600);
+        boardPane.setStyle("-fx-background-color: white;");
+        
+        // Move counter text
+        stepCountText = new Text("Move: 0 / 0");
+        stepCountText.setFont(Font.font("Poly", 18));
+        
+        animation = new Animation();
 
-        // Create the bottom control section with center alignment
-        HBox bottomControls = new HBox(20);
+        setupWelcomeView();
+
+        // Bottom control section
+        HBox bottomControls = new HBox(10);
         bottomControls.setPadding(new Insets(20));
-        bottomControls.setAlignment(Pos.CENTER); // Centers children horizontally in the HBox
-        bottomControls.setMaxWidth(Double.MAX_VALUE); // Allow HBox to expand to full width of parent
+        bottomControls.setAlignment(Pos.CENTER);
+        bottomControls.setMaxWidth(Double.MAX_VALUE);
 
         // Speed slider section
         VBox speedSection = new VBox(5);
@@ -271,8 +272,8 @@ public class GUI extends Application
         speedSection.setPrefWidth(300);
 
         Label speedLabel = new Label("Speed:");
-        speedLabel.setFont(Font.font("Poly", 14)); // Increased font size
-        speedLabel.setAlignment(Pos.CENTER); // Center the label text
+        speedLabel.setFont(Font.font("Poly", 14));
+        speedLabel.setAlignment(Pos.CENTER);
 
         speedSlider = new Slider(0.1, 3.0, 1.0);
         speedSlider.setShowTickMarks(true);
@@ -281,12 +282,12 @@ public class GUI extends Application
         speedSlider.setMinorTickCount(1);
         speedSlider.setSnapToTicks(true);
         speedSlider.setDisable(true);
-        speedSlider.setMaxWidth(250); // Constrain slider width
+        speedSlider.setMaxWidth(250);
 
         // Simple styling to match the gray theme and Poly font
         speedSlider.setStyle(
             "-fx-control-inner-background: #E0E0E0;" +
-            "-fx-accent: #808080;" +          // Color of the filled track (same as selected buttons)
+            "-fx-accent: #808080;" +     
             "-fx-font-family: 'Poly';" +
             "-fx-disabled-opacity: 0.6;"      // Same as your buttons
         );
@@ -294,7 +295,7 @@ public class GUI extends Application
         speedSection.getChildren().addAll(speedLabel, speedSlider);
 
         // Playback controls section with larger buttons
-        HBox playbackControls = new HBox(15); // Increased spacing
+        HBox playbackControls = new HBox(15);
         playbackControls.setAlignment(Pos.CENTER);
 
         playButton = new Button("▶");
@@ -325,7 +326,7 @@ public class GUI extends Application
         playbackControls.getChildren().addAll(playButton, pauseButton, stopButton);
 
         // Save buttons section with larger buttons
-        HBox saveControls = new HBox(15); // Increased spacing
+        HBox saveControls = new HBox(15);
         saveControls.setAlignment(Pos.CENTER);
 
         saveTxtButton = new Button("Save .txt");
@@ -346,7 +347,7 @@ public class GUI extends Application
 
         // Add the bottom controls to the main layout
         VBox rightSection = new VBox();
-        rightSection.setAlignment(Pos.CENTER); // Center align VBox contents
+        rightSection.setAlignment(Pos.CENTER);
         rightSection.getChildren().addAll(mainContent, bottomControls);
         VBox.setVgrow(mainContent, Priority.ALWAYS);
 
@@ -355,7 +356,7 @@ public class GUI extends Application
         mainLayout.getChildren().addAll(sidebarWrapper, separator, rightSection);
 
         Scene scene = new Scene(mainLayout);
-
+        
         // Add app icon
         try 
         {
@@ -443,58 +444,86 @@ public class GUI extends Application
     /**
      * Set up the results view.
      */
-    private void setupResultsView() 
+private void setupResultsView()
+{
+    mainContent.getChildren().clear();
+    
+    // Use a VBox with explicit spacing for the entire content layout
+    VBox contentLayout = new VBox();
+    contentLayout.setAlignment(Pos.TOP_CENTER);
+    contentLayout.setSpacing(20); // Good spacing between major sections
+    
+    // 1. Title section
+    Label resultsLabel = new Label("~ Results ~");
+    resultsLabel.setFont(Font.font("Poly", 24));
+    resultsLabel.setAlignment(Pos.CENTER);
+
+    VBox.setMargin(resultsLabel, new Insets(0, 0, 10, 0));
+    
+    try
     {
-        mainContent.getChildren().clear();
+        // 3. Board container (centered)
+        StackPane boardContainer = new StackPane();
+        boardContainer.setAlignment(Pos.CENTER);
         
-        Label resultsLabel = new Label("~ Results ~");
-        resultsLabel.setFont(Font.font("Poly", 32));
-        resultsLabel.setAlignment(Pos.CENTER);
+        // Your adaptive cell size calculation
+        int maxWidth = 400;
+        int maxHeight = 400;
+        int cellWidthBased = (maxWidth - 20) / board.getCols();
+        int cellHeightBased = (maxHeight - 20) / board.getRows();
+        int cellSize = Math.min(cellWidthBased, cellHeightBased);
+        cellSize = Math.max(cellSize, 20);
         
-        try 
-        {
-            File currentDir = new File(System.getProperty("user.dir"));
-            File outputImage = new File(currentDir.getParentFile().getParentFile() + "/test/" + "temp" + "-output.png");
-            Image image = new Image(outputImage.toURI().toString());
-            ImageView solutionImage = new ImageView(image);
-            
-            solutionImage.setFitWidth(400);
-            solutionImage.setFitHeight(400);
-            solutionImage.setPreserveRatio(true);
-            
-            VBox imageContainer = new VBox(solutionImage);
-            imageContainer.setPadding(new Insets(20));
-            imageContainer.setAlignment(Pos.CENTER);
-            
-            Label stepLabel = new Label("Move: " + currentStep + "/" + totalSteps);
-            stepLabel.setFont(Font.font("Poly", 14));
-            
-            Label nodesLabel = new Label("Nodes Explored: " + nodesExplored);
-            nodesLabel.setFont(Font.font("Poly", 14));
-            
-            Label timeLabel = new Label("Searching Time: " + searchTime + " ms");
-            timeLabel.setFont(Font.font("Poly", 14));
-            
-            VBox statsContainer = new VBox(10);
-            statsContainer.setAlignment(Pos.CENTER);
-            statsContainer.getChildren().addAll(stepLabel, nodesLabel, timeLabel);
-            
-            mainContent.getChildren().addAll(resultsLabel, imageContainer, statsContainer);
-            
-            // Enable animation controls and save buttons
-            speedSlider.setDisable(false);
-            playButton.setDisable(false);
-            pauseButton.setDisable(true);
-            stopButton.setDisable(false);
-            saveTxtButton.setDisable(false);
-            
-        } 
-        catch (Exception e) 
-        {
-            System.err.println("Error loading solution image: " + e.getMessage());
-            showAlert("Error displaying results: " + e.getMessage());
-        }
+        // Set the cell size in the animation object
+        animation.setCellSize(cellSize);
+        
+        // Calculate final dimensions
+        double boardWidth = board.getCols() * cellSize + 20;
+        double boardHeight = board.getRows() * cellSize + 20;
+        
+        boardPane.setMinSize(boardWidth, boardHeight);
+        boardPane.setMaxSize(boardWidth, boardHeight);
+        boardPane.setPrefSize(boardWidth, boardHeight);
+        boardContainer.getChildren().add(boardPane);
+        
+        // 5. Stats container
+        VBox statsContainer = new VBox(10); // 10px spacing between stat items
+        statsContainer.setAlignment(Pos.CENTER);
+        
+        // Initialize step counter
+        currentStep = 0;
+        totalSteps = moves != null ? moves.size() : 0;
+        stepCountText.setText("Move: " + currentStep + " / " + totalSteps);
+        stepCountText.setFont(Font.font("Poly", 18));
+        
+        Label outLabel = new Label("Nodes Explored: " + nodesExplored + "    |    Searching Time: " + searchTime + " ms");
+        outLabel.setFont(Font.font("Poly", 14));
+        
+        statsContainer.getChildren().addAll(stepCountText, outLabel);
+        
+        // Add all components to the main content layout in order with proper spacing
+        contentLayout.getChildren().addAll(
+            resultsLabel,
+            boardContainer,
+            statsContainer
+        );
+        
+        // Add the content layout to the main content
+        mainContent.getChildren().add(contentLayout);
+        
+        // Enable appropriate controls
+        speedSlider.setDisable(false);
+        playButton.setDisable(false);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(false);
+        saveTxtButton.setDisable(false);
+    } 
+    catch (Exception e) 
+    {
+        System.err.println("Error displaying results: " + e.getMessage());
+        showAlert("Error displaying results: " + e.getMessage());
     }
+}
 
     /**
      * Show an error view with the provided error message.
@@ -505,7 +534,7 @@ public class GUI extends Application
     {
         mainContent.getChildren().clear();
         
-        Label resultsLabel = new Label("~ Results ~");
+        Label resultsLabel = new Label("~ Error ~");
         resultsLabel.setFont(Font.font("Poly", 32));
         resultsLabel.setAlignment(Pos.CENTER);
         
@@ -514,12 +543,23 @@ public class GUI extends Application
         errorLabel.setTextFill(javafx.scene.paint.Color.RED);
         errorLabel.setAlignment(Pos.CENTER);
         errorLabel.setWrapText(true);
+        errorLabel.setMaxWidth(600);
         
         VBox errorContainer = new VBox(20);
         errorContainer.setAlignment(Pos.CENTER);
         errorContainer.getChildren().addAll(resultsLabel, errorLabel);
         
         mainContent.getChildren().add(errorContainer);
+        
+        // Make sure animation controls are properly reset
+        resetAnimationControls();
+        
+        // Keep solve button enabled if algorithm and heuristic are selected
+        if (!selectedAlgorithm.isEmpty()) {
+            if (selectedAlgorithm.equals("UCS") || !selectedHeuristic.isEmpty()) {
+                solveButton.setDisable(false);
+            }
+        }
     }
 
     /**
@@ -532,12 +572,11 @@ public class GUI extends Application
         
         // Algorithm button handlers
         aStarButton.setOnAction(e -> handleAlgorithmSelection("A*"));
-        fringeButton.setOnAction(e -> handleAlgorithmSelection("Fringe"));
         gbfsButton.setOnAction(e -> handleAlgorithmSelection("GBFS"));
         ucsButton.setOnAction(e -> handleAlgorithmSelection("UCS"));
         
         // Heuristic button handlers
-        distanceButton.setOnAction(e -> handleHeuristicSelection("Distance"));
+        distanceButton.setOnAction(e -> handleHeuristicSelection("Manhattan"));
         blockingButton.setOnAction(e -> handleHeuristicSelection("Blocking"));
         
         // Solve button handler
@@ -550,6 +589,12 @@ public class GUI extends Application
         
         // Save button handlers
         saveTxtButton.setOnAction(e -> handleSaveTxtClick());
+        
+        speedSlider.valueProperty().addListener((obs, oldVal, newVal) -> 
+        {
+            if (animation != null && animation.getMovesAnimation() != null)
+                animation.setSpeed(newVal.doubleValue());
+        });
     }
     
     /**
@@ -557,40 +602,48 @@ public class GUI extends Application
      */
     private void handleLoadButtonClick() 
     {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open TXT File");
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Text Files", "*.txt")
-        );
-        
-        // Set initial directory to the test folder
-        try {
+        File initialDirectory = null;
+        try 
+        {
             File currentDir = new File(System.getProperty("user.dir"));
             File testDir = new File(currentDir.getParentFile().getParentFile() + "/test");
-            fileChooser.setInitialDirectory(testDir);
-        } catch (Exception e) {
+            
+            if (testDir.exists() && testDir.isDirectory()) initialDirectory = testDir;
+            else initialDirectory = currentDir;
+        } 
+        catch (Exception e) 
+        {
             System.err.println("Error setting initial directory: " + e.getMessage());
+            initialDirectory = new File(System.getProperty("user.dir"));
         }
         
-        Stage stage = (Stage) loadButton.getScene().getWindow();
-        File selectedFile = fileChooser.showOpenDialog(stage);
+        File selectedFile = OutputGUI.showCustomFileDialog(
+            loadButton.getScene().getWindow(),
+            "Load Puzzle File",
+            initialDirectory,
+            null,
+            false
+        );
         
-        if (selectedFile != null) {
+        if (selectedFile != null) 
+        {
             String filePath = selectedFile.getAbsolutePath();
-            if (filePath.toLowerCase().endsWith(".txt")) {
+            
+            if (filePath.toLowerCase().endsWith(".txt")) 
+            {
                 fileName = selectedFile.getName();
                 fileNameLabel.setText(fileName);
-                loadPreview(fileName);
                 
-                // Reset UI state for new file
+                this.inputFilePath = filePath;
+                loadPreview(filePath);
+                
                 resetUIState();
                 enableAlgorithmButtons();
-            } else {
-                showErrorView("Not .txt file loaded");
-            }
+            } 
+            else showAlert("Please select a .txt file");
         }
     }
-    
+
     /**
      * Handle algorithm selection.
      * 
@@ -600,19 +653,14 @@ public class GUI extends Application
     {
         selectedAlgorithm = algorithm;
         
-        // Reset button styles
         aStarButton.setStyle(createButtonStyle(false));
-        fringeButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
         
-        // Highlight selected button
-        switch (algorithm) {
+        switch (algorithm) 
+        {
             case "A*":
                 aStarButton.setStyle(createButtonStyle(true));
-                break;
-            case "Fringe":
-                fringeButton.setStyle(createButtonStyle(true));
                 break;
             case "GBFS":
                 gbfsButton.setStyle(createButtonStyle(true));
@@ -622,24 +670,21 @@ public class GUI extends Application
                 break;
         }
         
-        // Enable or disable heuristic buttons based on algorithm
-        if (algorithm.equals("UCS")) {
+        selectedHeuristic = "";
+        distanceButton.setStyle(createButtonStyle(false));
+        blockingButton.setStyle(createButtonStyle(false));
+        
+        if (algorithm.equals("UCS")) 
+        {
             distanceButton.setDisable(true);
             blockingButton.setDisable(true);
-            
-            // Reset heuristic selection
-            selectedHeuristic = "";
-            distanceButton.setStyle(createButtonStyle(false));
-            blockingButton.setStyle(createButtonStyle(false));
-            
-            // Enable solve button directly for UCS
             solveButton.setDisable(false);
-        } else {
+        } 
+        else 
+        {
             distanceButton.setDisable(false);
             blockingButton.setDisable(false);
-            
-            // Check if heuristic is already selected
-            solveButton.setDisable(selectedHeuristic.isEmpty());
+            solveButton.setDisable(true);
         }
     }
     
@@ -657,8 +702,9 @@ public class GUI extends Application
         blockingButton.setStyle(createButtonStyle(false));
         
         // Highlight selected button
-        switch (heuristic) {
-            case "Distance":
+        switch (heuristic) 
+        {
+            case "Manhattan":
                 distanceButton.setStyle(createButtonStyle(true));
                 break;
             case "Blocking":
@@ -669,39 +715,214 @@ public class GUI extends Application
         // Enable solve button if algorithm is selected
         solveButton.setDisable(selectedAlgorithm.isEmpty());
     }
-    
+
     /**
      * Handle the Solve button click event.
+     * Fixed to ensure proper validation checks for input file format.
      */
     private void handleSolveButtonClick() 
     {
-        // This will be implemented later
-        // For now, just simulate the state change
+        solveButton.setDisable(true);
         
-        currentStep = 1;
-        totalSteps = 32; // Example value
-        nodesExplored = 69; // Example value
-        searchTime = 2; // Example value in ms
+        isPlaying = false;
+        isPaused = false;
         
-        // Setup results view with the solution
-        setupResultsView();
+        resetAnimationControls();
+        
+        // Use the stored input file path
+        File file = new File(inputFilePath);
+        
+        ProgressIndicator progress = new ProgressIndicator();
+        VBox loadingBox = new VBox(10);
+        loadingBox.setAlignment(Pos.CENTER);
+        
+        Label loadingLabel = new Label("Loading and solving puzzle...");
+        loadingLabel.setFont(Font.font("Poly", 14));
+        
+        loadingBox.getChildren().addAll(progress, loadingLabel);
+        mainContent.getChildren().clear();
+        mainContent.getChildren().add(loadingBox);
+        
+        Task<List<int[]>> solveTask = new Task<List<int[]>>() 
+        {
+            @Override
+            protected List<int[]> call() throws Exception 
+            {
+                try 
+                {
+                    inputParser = new Input();
+                    inputParser.validateFile(file);
+                    
+                    if (inputParser.hasError()) 
+                    {
+                        final String errorMsg = inputParser.getErrorMsg();
+                        Platform.runLater(() -> 
+                        {
+                            board = new Board(0, 0, 0, 0, 0, "", errorMsg);
+                            showErrorView(errorMsg);
+                            solveButton.setDisable(false);
+                        });
+                        return null;
+                    }
+            
+                    inputParser.readInput(file.getAbsolutePath());
+                    
+                    if (inputParser.hasError()) 
+                    {
+                        final String errorMsg = inputParser.getErrorMsg();
+                        Platform.runLater(() -> 
+                        {
+                    
+                            board = new Board(0, 0, 0, 0, 0, "", errorMsg);
+                            showErrorView(errorMsg);
+                            solveButton.setDisable(false);
+                        });
+                        return null;
+                    }
+                    
+                    board = new Board(
+                        inputParser.getRows(),
+                        inputParser.getCols(),
+                        inputParser.getNumCars(),
+                        inputParser.getExitRow(),
+                        inputParser.getExitCol(),
+                        inputParser.getExitSide(),
+                        null
+                    );
+                    
+                    board.loadConfiguration(inputParser.getBoardConfig());
+                    
+                    if (board.hasError()) 
+                    {
+                        final String errorMsg = board.getErrorMsg();
+                        Platform.runLater(() -> 
+                        {
+                            board = new Board(0, 0, 0, 0, 0, "", errorMsg);
+                            showErrorView(errorMsg);
+                            solveButton.setDisable(false);
+                        });
+                        return null;
+                    }
+                    
+                    // Solve the puzzle using the selected algorithm
+                    Algorithm algorithm = null;
+                    List<int[]> solutionMoves = null;
+                
+                    switch (selectedAlgorithm) 
+                    {
+                        case "A*":
+                            algorithm = new AStar(board);
+                            solutionMoves = algorithm.solve(selectedHeuristic);
+                            break;
+                        case "GBFS":
+                            algorithm = new GBFS(board);
+                            solutionMoves = algorithm.solve(selectedHeuristic);
+                            break;
+                        case "UCS":
+                            algorithm = new UCS(board);
+                            solutionMoves = algorithm.solve("none");
+                            break;
+                    }
+                    
+                    if (algorithm != null) 
+                    {
+                        searchTime = algorithm.getExecutionTime();
+                        nodesExplored = algorithm.getNodesExplored();
+                    }
+                    
+                    return solutionMoves;
+                }
+                catch (Exception ex) 
+                {
+                    final String errorMsg = "Unexpected error: " + ex.getMessage();
+                    Platform.runLater(() -> 
+                    {
+                        board = new Board(0, 0, 0, 0, 0, "", errorMsg);
+                        showErrorView(errorMsg);
+                        solveButton.setDisable(false);
+                    });
+                    ex.printStackTrace();
+                    return null;
+                }
+            }
+        };
+        
+        solveTask.setOnSucceeded(event -> 
+        {
+            moves = solveTask.getValue();
+            
+            if (moves != null && !moves.isEmpty()) 
+            {
+                totalSteps = moves.size();
+                currentStep = 0;
+                
+                Board displayBoard = board.copy();
+                displayBoard.setCurrentMovedCarIndex(null);
+        
+                animation.initialize(displayBoard, moves, stepCountText);
+
+                setupResultsView();
+                
+                animation.drawBoard(displayBoard, boardPane);
+
+                playButton.setDisable(false);
+                stopButton.setDisable(false);
+                speedSlider.setDisable(false);
+                saveTxtButton.setDisable(false);
+            } 
+            else if (board != null && board.hasError()) 
+            {
+                showErrorView(board.getErrorMsg());
+                saveTxtButton.setDisable(false);
+            }
+            else if (moves == null)
+            {
+                saveTxtButton.setDisable(false);
+            }
+            else 
+            {
+                showErrorView("No solution found after exploring " + nodesExplored + " nodes.");
+                saveTxtButton.setDisable(false);
+            }
+            
+            solveButton.setDisable(false);
+        });
+        
+        solveTask.setOnFailed(event -> 
+        {
+            Throwable exception = solveTask.getException();
+            showErrorView("Error solving puzzle: " + exception.getMessage());
+            solveButton.setDisable(false);
+        });
+        
+        new Thread(solveTask).start();
     }
-    
+
     /**
      * Handle the Play button click event.
      */
     private void handlePlayButtonClick() 
     {
-        isPlaying = true;
-        isPaused = false;
-        
-        // Update button states
-        playButton.setDisable(true);
-        pauseButton.setDisable(false);
-        stopButton.setDisable(false);
-        speedSlider.setDisable(true);
-        
-        // Animation playback logic will be implemented later
+        if (animation != null) 
+        {
+            // Animation with current speed on first play
+            if (animation.getMovesAnimation() == null || (!isPlaying && !isPaused)) 
+            {
+                animation.createMovesAnimation(board, moves, boardPane, speedSlider.getValue());
+            }
+            
+            animation.play(speedSlider.getValue());
+            isPlaying = true;
+            isPaused = false;
+            
+            // Update button states
+            playButton.setDisable(true);
+            pauseButton.setDisable(false);
+            stopButton.setDisable(false);
+            
+            // Disable speed slider during playback
+            speedSlider.setDisable(true);
+        }
     }
     
     /**
@@ -709,16 +930,20 @@ public class GUI extends Application
      */
     private void handlePauseButtonClick() 
     {
-        isPlaying = false;
-        isPaused = true;
-        
-        // Update button states
-        playButton.setDisable(false);
-        pauseButton.setDisable(true);
-        stopButton.setDisable(false);
-        speedSlider.setDisable(false);
-        
-        // Animation pause logic will be implemented later
+        if (animation != null) 
+        {
+            animation.pause();
+            isPlaying = false;
+            isPaused = true;
+            
+            // Update button states
+            playButton.setDisable(false);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(false);
+            
+            // Enable speed slider when paused
+            speedSlider.setDisable(false);
+        }
     }
     
     /**
@@ -726,48 +951,124 @@ public class GUI extends Application
      */
     private void handleStopButtonClick() 
     {
-        isPlaying = false;
-        isPaused = false;
-        
-        // Update button states
-        playButton.setDisable(false);
-        pauseButton.setDisable(true);
-        stopButton.setDisable(false);
-        speedSlider.setDisable(false);
-        
-        // Animation stop logic will be implemented later
+        if (animation != null) 
+        {
+            animation.stop();
+            isPlaying = false;
+            isPaused = false;
+            currentStep = 0;
+            
+            playButton.setDisable(false);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(false);
+            
+            speedSlider.setDisable(false);
+            animation.drawBoard(board, boardPane);
+        }
     }
     
     /**
-     * Handle the Save GIF button click event.
-     */
-    private void handleSaveGifClick() 
-    {
-        // This will be implemented later
-        showInfo("Successfully saved GIF to " + fileName + "-output.gif");
-    }
-    
-    /**
-     * Handle the Save TXT button click event.
+     * Handle the Save TXT button click event with custom file dialog.
      */
     private void handleSaveTxtClick() 
     {
-        // This will be implemented later
-        showInfo("Successfully saved solution to " + fileName + "-output.txt");
+        try 
+        {   
+            String defaultFileName = fileName.replace(".txt", "") + "-output.txt";
+            
+            File initialDirectory = null;
+            try 
+            {
+                File inputFile = new File(inputFilePath);
+                initialDirectory = inputFile.getParentFile();
+            } 
+            catch (Exception e) 
+            {
+                try {
+                    File currentDir = new File(System.getProperty("user.dir"));
+                    File testDir = new File(currentDir.getParentFile().getParentFile() + "/test");
+                    
+                    if (testDir.exists() && testDir.isDirectory()) initialDirectory = testDir;
+                    else initialDirectory = currentDir;
+                } 
+                catch (Exception ex) 
+                {
+                    System.err.println("Error setting initial save directory: " + ex.getMessage());
+                    initialDirectory = new File(System.getProperty("user.dir"));
+                }
+            }
+            
+            // Show custom file save dialog
+            File outputFile = OutputGUI.showCustomFileDialog(
+                saveTxtButton.getScene().getWindow(),
+                "Save Solution File",
+                initialDirectory,
+                defaultFileName,
+                true 
+            );
+            
+            if (outputFile != null) 
+            {
+                String outputPath = outputFile.getAbsolutePath();
+                
+                // If board has an error, save the error information
+                if (board.hasError()) 
+                {
+                    OutputGUI output = new OutputGUI(outputPath, 
+                                                    board, 
+                                                    0,
+                                                    0,
+                                                    null);
+                    
+                    if (output.saveToText()) 
+                    {
+                        showInfo("Successfully saved error information to " + outputFile.getName());
+                    }
+                } 
+                else if (moves != null && !moves.isEmpty()) 
+                {
+                    OutputGUI output = new OutputGUI(outputPath, 
+                                                    board, 
+                                                    searchTime, 
+                                                    nodesExplored, 
+                                                    moves);
+                    
+                    if (output.saveToText()) 
+                    {
+                        showInfo("Successfully saved solution to " + outputFile.getName());
+                    }
+                }
+                else {
+                    // No solution found case
+                    OutputGUI output = new OutputGUI(outputPath, 
+                                                    board, 
+                                                    searchTime, 
+                                                    nodesExplored, 
+                                                    null);
+                                                    
+                    if (output.saveToText()) 
+                    {
+                        showInfo("Successfully saved to " + outputFile.getName());
+                    }
+                }
+            }
+        } 
+        catch (IOException e) 
+        {
+            showAlert("Error saving solution: " + e.getMessage());
+        }
     }
 
     /**
      * Load the preview of the selected test case.
      * 
-     * @param fileName Name of the test case file
+     * @param filePath Path to the file to load
      */
-    private void loadPreview(String fileName) 
+    private void loadPreview(String filePath) 
     {
         try 
         {
-            File currentDir = new File(System.getProperty("user.dir"));
-            File file = new File(currentDir.getParentFile().getParentFile() + "/test/" + fileName);
-            String content = new String(java.nio.file.Files.readAllBytes(file.toPath()));
+            String content = new String(Files.readAllBytes(Paths.get(filePath)));
             previewArea.setText(content);
             previewArea.positionCaret(0);
         } 
@@ -782,38 +1083,52 @@ public class GUI extends Application
      */
     private void resetUIState() 
     {
-        // Reset algorithm selection
+        // Reset algorithm and heuristic selection state
         selectedAlgorithm = "";
         aStarButton.setStyle(createButtonStyle(false));
-        fringeButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
         
-        // Reset heuristic selection
         selectedHeuristic = "";
         distanceButton.setStyle(createButtonStyle(false));
         blockingButton.setStyle(createButtonStyle(false));
         distanceButton.setDisable(true);
         blockingButton.setDisable(true);
         
-        // Disable solve button
         solveButton.setDisable(true);
+        resetAnimationControls();
+        setupWelcomeView();
         
-        // Disable animation controls
-        speedSlider.setDisable(true);
-        playButton.setDisable(true);
-        pauseButton.setDisable(true);
-        stopButton.setDisable(true);
-        
-        // Disable save buttons
-        saveTxtButton.setDisable(true);
+        board = null;
+        moves = null;
+        searchTime = 0;
+        nodesExplored = 0;
+    }
+    
+    /**
+     * Reset animation controls.
+     */
+    private void resetAnimationControls() 
+    {
+        // Stop any running animation
+        if (animation != null)
+            animation.stop();
         
         // Reset animation state
         isPlaying = false;
         isPaused = false;
+        currentStep = 0;
+        totalSteps = 0;
         
-        // Reset the main content
-        setupWelcomeView();
+        // Update text display
+        if (stepCountText != null) 
+            stepCountText.setText("Move: 0 / 0");
+    
+        playButton.setDisable(true);
+        pauseButton.setDisable(true);
+        stopButton.setDisable(true);
+        speedSlider.setDisable(true);
+        saveTxtButton.setDisable(true);
     }
     
     /**
@@ -822,11 +1137,10 @@ public class GUI extends Application
     private void enableAlgorithmButtons() 
     {
         aStarButton.setDisable(false);
-        fringeButton.setDisable(false);
         gbfsButton.setDisable(false);
         ucsButton.setDisable(false);
     }
-    
+
     /**
      * Create a style string for buttons.
      * 
@@ -844,32 +1158,140 @@ public class GUI extends Application
                "-fx-padding: 8 20;" +
                "-fx-font-family: 'Poly';";
     }
-
+    
     /**
-     * Show an alert dialog with the provided message.
+     * Show the alert dialog
      * 
      * @param message Alert message
      */
     private void showAlert(String message) 
     {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.setTitle(null);
+        alert.setHeaderText(null); 
+        
+        Label contentLabel = new Label(message);
+        contentLabel.setFont(Font.font("Poly", 14));
+        contentLabel.setWrapText(true);
+        contentLabel.setPrefWidth(350);
+        contentLabel.setMaxWidth(350);
+        contentLabel.setPadding(new Insets(10, 5, 10, 5));
+        
+        alert.getDialogPane().setContent(contentLabel);
+        alert.getDialogPane().getStyleClass().remove("header-panel");
+        
+        javafx.scene.control.DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStyleClass().add("custom-alert");
+        
+        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+        okButton.setFont(Font.font("Poly", 12));
+        okButton.setStyle(createButtonStyle(false));
+        
+        Stage alertStage = (Stage) dialogPane.getScene().getWindow();
+        StackPane alertRoot = new StackPane();
+        alertRoot.getChildren().add(dialogPane.getContent());
+        
+        HBox buttonBar = new HBox(10);
+        buttonBar.setAlignment(Pos.CENTER_RIGHT);
+        buttonBar.setPadding(new Insets(10, 5, 5, 5));
+        buttonBar.getChildren().add(okButton);
+        
+        VBox alertLayout = new VBox(10);
+        alertLayout.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-padding: 15px;" +
+            "-fx-border-color: black;" +
+            "-fx-border-width: 1px;"
+        );
+        alertLayout.getChildren().addAll(alertRoot, buttonBar);
+        
+        Scene newScene = new Scene(alertLayout);
+        newScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        alertStage.setScene(newScene);
+        
+        // Center the dialog on the screen
+        alertStage.setOnShown(e -> 
+        {
+            Stage primaryStage = (Stage) mainContent.getScene().getWindow();
+            
+            double alertWidth = alertStage.getWidth();
+            double alertHeight = alertStage.getHeight();
+            
+            double centerX = primaryStage.getX() + (primaryStage.getWidth() - alertWidth) / 2;
+            double centerY = primaryStage.getY() + (primaryStage.getHeight() - alertHeight) / 2;
+            
+            alertStage.setX(centerX);
+            alertStage.setY(centerY);
+        });
+        
         alert.showAndWait();
     }
 
     /**
-     * Show an information dialog with the provided message.
+     * Show the information dialog
      * 
      * @param message Information message
      */
     private void showInfo(String message) 
     {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Success");
+        alert.setTitle(null);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        
+        Label contentLabel = new Label(message);
+        contentLabel.setFont(Font.font("Poly", 14));
+        contentLabel.setWrapText(true);
+        contentLabel.setPrefWidth(350);
+        contentLabel.setMaxWidth(350);
+        contentLabel.setPadding(new Insets(10, 5, 10, 5));
+        
+        alert.getDialogPane().setContent(contentLabel);
+        alert.getDialogPane().getStyleClass().remove("header-panel");
+        
+        javafx.scene.control.DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStyleClass().add("custom-alert");
+        
+        Button okButton = (Button) dialogPane.lookupButton(ButtonType.OK);
+        okButton.setFont(Font.font("Poly", 14));
+        okButton.setStyle(createButtonStyle(false));
+        
+        Stage alertStage = (Stage) dialogPane.getScene().getWindow();
+        alertStage.initStyle(javafx.stage.StageStyle.TRANSPARENT);
+        
+        StackPane alertRoot = new StackPane();
+        alertRoot.getChildren().add(dialogPane.getContent());
+        
+        HBox buttonBar = new HBox(10);
+        buttonBar.setAlignment(Pos.CENTER_RIGHT);
+        buttonBar.setPadding(new Insets(10, 5, 5, 5));
+        buttonBar.getChildren().add(okButton);
+        
+        VBox alertLayout = new VBox(10);
+        alertLayout.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-padding: 15px;" +
+            "-fx-border-color: black;" +
+            "-fx-border-width: 1px;"
+        );
+        alertLayout.getChildren().addAll(alertRoot, buttonBar);
+        
+        Scene newScene = new Scene(alertLayout);
+        newScene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        alertStage.setScene(newScene);
+        
+        alertStage.setOnShown(e -> {
+            Stage primaryStage = (Stage) mainContent.getScene().getWindow();
+            
+            double alertWidth = alertStage.getWidth();
+            double alertHeight = alertStage.getHeight();
+            
+            double centerX = primaryStage.getX() + (primaryStage.getWidth() - alertWidth) / 2;
+            double centerY = primaryStage.getY() + (primaryStage.getHeight() - alertHeight) / 2;
+            
+            alertStage.setX(centerX);
+            alertStage.setY(centerY);
+        });
+        
         alert.showAndWait();
     }
 
