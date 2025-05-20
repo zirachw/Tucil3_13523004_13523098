@@ -18,6 +18,7 @@ public class Input
     private int N;                         // Number of cars on the board
     private int exitRow;                   // Row of the exit
     private int exitCol;                   // Column of the exit
+    private int maxBufLen;                 // Maximum buffer length for the board configuration
     private String exitSide;               // Side of the exit (LEFT, RIGHT, TOP, BOTTOM)
     private String errorMsg;               // Error message if any
     private ArrayList<String> boardConfig; // Configuration of the board
@@ -217,9 +218,9 @@ public class Input
 
         int cars = Integer.parseInt(tokens[0]);
 
-        if (cars < 0) 
+        if (cars < 0 || cars > 24) 
         {
-            this.errorMsg = "N must be a non-negative integer. Found N = " + cars + ".";
+            this.errorMsg = "Invalid number of cars. N must be between 0 and 24. Found N = " + cars + ".";
             return;
         }
         
@@ -238,17 +239,53 @@ public class Input
     public void validateBoardConfig() 
     {
         ExitPosition exitPosition = null;
-        
+                
         if (this.boardConfig.size() > this.getRows() && 
-            this.boardConfig.get(0).matches("K")) 
-        {
-            if (this.boardConfig.get(0).matches("^\\s*K\\s*$"))
+            this.boardConfig.get(0).contains("K")) 
+         {
+            // Check if the top exit line only contains 'K' and whitespace
+            if (this.boardConfig.get(0).matches("^\\s*K\\s*$")) 
             {
-                exitPosition = new ExitPosition(0, this.boardConfig.get(0).indexOf('K'), "TOP");
+                int kIndex = this.boardConfig.get(0).indexOf('K');
+                
+                // Create exit position
+                exitPosition = new ExitPosition(0, kIndex, "TOP");
+                
+                // Check if K is within the valid column range
+                if (kIndex >= this.getCols()) 
+                {
+                    this.errorMsg = "Exit (K) cannot be in Corner or exceeds further.";
+                    return;
+                }
+                
+                // Check if there is a valid path from exit to a car
+                boolean foundValidPath = false;
+                for (int i = 1; i < this.boardConfig.size(); i++) 
+                {
+                    // Ensure the row has enough columns to check the K position
+                    if (this.boardConfig.get(i).length() > kIndex) 
+                    {
+                        char cellBelow = this.boardConfig.get(i).charAt(kIndex);
+                        // If we found a car or empty space, the path is valid
+                        if ((cellBelow >= 'A' && cellBelow <= 'Z') || cellBelow == '.') 
+                        {
+                            foundValidPath = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!foundValidPath) 
+                {
+                    this.errorMsg = "Exit (K) cannot be in Corner or inside board have whitespaces.";
+                    return;
+                }
+                
+                // If all checks pass, remove the top exit line
                 this.boardConfig.remove(0);
-            }
+            } 
             else 
-            {   
+            {
                 this.errorMsg = "Exit (K) only allowed along with whitespaces";
                 return;
             }
@@ -261,9 +298,18 @@ public class Input
             {
                 if (this.boardConfig.get(this.boardConfig.size() - 1).matches("^\\s*K\\s*$"))
                 {
-                    exitPosition = new ExitPosition(this.boardConfig.size() - 2, 
-                                                    this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K'), "BOTTOM");
-                    this.boardConfig.remove(this.boardConfig.size() - 1);
+                    if (this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K') == 0 ||
+                        this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K') > this.getCols()) 
+                    {
+                        this.errorMsg = "Exit (K) cannot be in Corner or exceeds further.";
+                        return;
+                    }
+                    else
+                    {
+                        exitPosition = new ExitPosition(this.boardConfig.size() - 2, 
+                                                        this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K'), "BOTTOM");
+                        this.boardConfig.remove(this.boardConfig.size() - 1);
+                    }
                 }
                 else 
                 {   
@@ -276,6 +322,22 @@ public class Input
                 this.errorMsg = "Found multiple exits (K) - at both top and bottom. Only one exit is allowed.";
                 return;
             } 
+        }
+
+        if (this.boardConfig.size() == this.getRows() + 1 && 
+            this.boardConfig.get(this.boardConfig.size() - 1).contains("K")) 
+        {
+            if (this.boardConfig.get(this.boardConfig.size() - 1).matches("^\\s*K\\s*$"))
+            {
+                exitPosition = new ExitPosition(this.boardConfig.size() - 1, 
+                                                this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K'), "BOTTOM");
+                this.boardConfig.remove(this.boardConfig.size() - 1);
+            }
+            else
+            {
+                this.errorMsg = "Exit (K) only allowed along with whitespaces";
+                return;
+            }
         }
         
         if (this.boardConfig.size() != this.getRows())
@@ -314,6 +376,12 @@ public class Input
                     return;
                 }
 
+                if (line.charAt(1) == ' ' || i == this.boardConfig.size() - 1) 
+                {
+                    this.errorMsg = "Exit cannot be in Corner.";
+                    return;
+                }
+
                 if (exitPosition == null) 
                 {
                     hasLeftExit  = true;
@@ -331,6 +399,12 @@ public class Input
             {
                 if (line.length() == this.getCols() + 1 && line.charAt(this.getCols()) == 'K') 
                 {
+                    if (line.charAt(this.getCols() - 1) == ' ') 
+                    {
+                        this.errorMsg = "Exit cannot be in Corner.";
+                        return;
+                    }
+
                     if (exitPosition == null) 
                     {
                         exitPosition  = new ExitPosition(i, this.getCols() - 1, "RIGHT");
@@ -344,14 +418,18 @@ public class Input
                 } 
                 else 
                 {
-                    this.errorMsg     = "Row " + (i + 1) + " exceeds expected length. Found " + line.length() + 
+                    int idx = i;
+                    if (exitPosition != null && exitPosition.side.equals("TOP")) idx++;
+                    this.errorMsg     = "Row " + (idx) + " exceeds expected length. Found " + line.length() + 
                                         " characters when expected " + this.getCols() + " or " + (this.getCols() + 1) + " with exit.";
                     return;
                 }
             } 
             else if (line.length() < this.getCols()) 
             {
-                this.errorMsg = "Row " + (i + 1) + " must have at least " + this.getCols() + " columns. Found " + line.length() + " columns.";
+                int idx = i;
+                if (exitPosition != null && exitPosition.side.equals("TOP")) idx++;
+                this.errorMsg = "Row " + (idx) + " must have at least " + this.getCols() + " columns. Found " + line.length() + " columns.";
                 return;
             }
             
@@ -379,6 +457,12 @@ public class Input
         if (hasLeftExit && !foundLeftSpace) 
         {
             this.errorMsg = "Exit (K) must be outside the board.";
+            return;
+        }
+
+        if (foundLeftSpace && !hasLeftExit) 
+        {
+            this.errorMsg = "Found space at the left side of the board, but no Exit (K) on most left column found.";
             return;
         }
 
@@ -478,12 +562,103 @@ public class Input
                     this.errorMsg = "Found multiple exits (K) in the same line";
                     return;
                 }
-
+                
+                this.maxBufLen = Math.max(this.maxBufLen, buffer.length());
                 this.boardConfig.add(buffer);
             }
         }
         
         br.close();
         validateBoardConfig();
+    }
+
+    public static String validateOption(Scanner scanner, int numOptions)
+    {
+        boolean valid = false;
+        String algo = null;
+        int option = -1;
+        
+        while (!valid) 
+        {
+            if (numOptions == 3)
+            {
+                System.out.println("[#] Algorithm selection:");
+                System.out.println();
+                System.out.println("[-] 1. A* Algorithm");
+                System.out.println("[-] 2. Greedy Best First Search (GBFS)");
+                System.out.println("[-] 3. Uniform Cost Search (UCS)");
+                System.out.println();
+                System.out.println("[?] Enter your choice (1, 2, or 3)");
+            }
+            else
+            {
+                System.out.println("[#] Heuristic selection:");
+                System.out.println();
+                System.out.println("[-] 1. Manhattan Distance");
+                System.out.println("[-] 2. Blocking Cars");
+                System.out.println();   
+                System.out.println("[?] Enter your choice (1 or 2)");
+            }
+            
+            System.out.println();
+            String line = scanner.nextLine();
+            System.out.println();
+
+            String[] tokens = line.split("\\s+");
+            if (tokens.length != 1) 
+            {
+                System.out.println("[!] Invalid input. Please enter a single integer, example \"1\".");
+                System.out.println();
+                continue;
+            }
+
+            if (!tokens[0].matches("\\d+")) 
+            {
+                System.out.println("Invalid input. Please enter a non-negative integer.");
+                System.out.println();
+                continue;
+            }
+
+            option = Integer.parseInt(tokens[0]);
+
+            if (option < 1 || option > numOptions) 
+            {
+                System.out.println("Invalid input. Please enter \"1\" to \"" + numOptions + "\".");
+                System.out.println();
+                continue;
+            }
+            else
+            {
+                valid = true;
+                if (numOptions == 3)
+                {
+                    switch (option) 
+                    {
+                        case 1:
+                            algo = "A*";
+                            break;
+                        case 2:
+                            algo = "GBFS";
+                            break;
+                        case 3:
+                            algo = "UCS";
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (option) 
+                    {
+                        case 1:
+                            algo = "Manhattan";
+                            break;
+                        case 2:
+                            algo = "Blocking";
+                            break;
+                    }   
+                }
+            }
+        }
+        return algo;
     }
 }
