@@ -3,9 +3,12 @@ import src.ADT.*;
 
 import java.util.*;
 
-public class UCS extends Algorithm {
-    
-    public UCS(Board board) { super(board); }
+public class UCS extends Algorithm 
+{    
+    public UCS(Board board) 
+    {
+        super(board);
+    }
 
     @Override
     public List<int[]> solve(String heuristic) 
@@ -16,43 +19,52 @@ public class UCS extends Algorithm {
 
     private List<int[]> solveUCS() 
     {
+        long startTime = startTiming();
+        
         PriorityQueue<State> queue = new PriorityQueue<>(Comparator.comparingInt(s -> s.getGValue()));
         List<int[]> initialMoves = new ArrayList<>();
         
         // UCS only uses g(n) - the cost from start to current node
-        queue.add(new State(initialBoard, initialMoves)); // UCS constructor
+        queue.add(new State(initialBoard, initialMoves));
         
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty())
+        {
             State curState = queue.poll();
             Board curBoard = curState.getBoard();
+            List<Car> pieces = curBoard.getCars();
             List<int[]> curMoves = curState.getMoves();
-
             incrementNodesExplored();
-            if(curBoard.isSolved()) return splitMovesToSteps(curMoves);
 
-            if(hasBeenVisited(curBoard)) continue;
+            if (curBoard.isSolved()) 
+            {
+                endTiming(startTime);
+                return splitMovesToSteps(curMoves);
+            }
+
+            if (hasBeenVisited(curBoard)) continue;
             addToVisited(curBoard);
             
-            List<Car> pieces = curBoard.getCars();
-            for(int i = 0; i < pieces.size(); i++)
+            for (int i = 0; i < pieces.size(); i++)
             {
                 List<Integer> validMoves = curBoard.getValidMoves(i);
-                for(Integer moveAmount : validMoves){
+                for(Integer moveAmount : validMoves)
+                {
                     Board newBoard = curBoard.copy();
                     newBoard = newBoard.applyMove(i, moveAmount);
                     
-                    if(!hasBeenVisited(newBoard))
+                    if (!hasBeenVisited(newBoard))
                     {
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         
                         // UCS: Create new state with updated moves
-                        queue.add(new State(newBoard, newMoves)); // UCS constructor
+                        queue.add(new State(newBoard, newMoves));
                     }
                 }
             }
         }
 
+        endTiming(startTime);
         return new ArrayList<>();
     }
 }
