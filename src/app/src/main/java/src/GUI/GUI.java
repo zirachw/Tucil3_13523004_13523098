@@ -26,6 +26,7 @@ import src.ADT.Board;
 import src.Algorithm.AStar;
 import src.Algorithm.GBFS;
 import src.Algorithm.UCS;
+import src.Algorithm.Fringe;
 import src.Algorithm.Algorithm;
 import src.IO.Input;
 
@@ -37,6 +38,7 @@ public class GUI extends Application
     private Button aStarButton;
     private Button gbfsButton;
     private Button ucsButton;
+    private Button fringeButton;
     private Button distanceButton;
     private Button blockingButton;
     private Button loadButton;
@@ -44,6 +46,7 @@ public class GUI extends Application
     private Button playButton;
     private Button pauseButton;
     private Button stopButton;
+    private Button skipButton;
     private Button saveTxtButton;
     
     private Slider speedSlider;
@@ -159,36 +162,44 @@ public class GUI extends Application
         algorithmLabel.setFont(Font.font("Poly", 16));
         algorithmLabel.setAlignment(Pos.CENTER);
         
-        HBox algorithmButtons = new HBox(10);
+        // Single row for all algorithm buttons
+        HBox algorithmButtons = new HBox(8); // Reduced spacing to fit all buttons
         algorithmButtons.setAlignment(Pos.CENTER);
         
         aStarButton = new Button("A*");
         gbfsButton = new Button("GBFS");
         ucsButton = new Button("UCS");
+        fringeButton = new Button("Fringe");
         
         aStarButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
         
-        // Set size and font for algorithm buttons
+        // Set size and font for algorithm buttons - make them smaller to fit in one row
         aStarButton.setPrefWidth(70);
         aStarButton.setPrefHeight(40);
         aStarButton.setFont(Font.font("Poly", 12));
         
-        gbfsButton.setPrefWidth(100);
+        gbfsButton.setPrefWidth(70);
         gbfsButton.setPrefHeight(40);
         gbfsButton.setFont(Font.font("Poly", 12));
         
-        ucsButton.setPrefWidth(100);
+        ucsButton.setPrefWidth(70);
         ucsButton.setPrefHeight(40);
         ucsButton.setFont(Font.font("Poly", 12));
+        
+        fringeButton.setPrefWidth(100);
+        fringeButton.setPrefHeight(40);
+        fringeButton.setFont(Font.font("Poly", 12));
 
         // Disable algorithm buttons initially
         aStarButton.setDisable(true);
         gbfsButton.setDisable(true);
         ucsButton.setDisable(true);
+        fringeButton.setDisable(true);
 
-        algorithmButtons.getChildren().addAll(aStarButton, gbfsButton, ucsButton);
+        algorithmButtons.getChildren().addAll(aStarButton, gbfsButton, ucsButton, fringeButton);
         VBox.setMargin(algorithmButtons, new Insets(0, 0, 15, 0));
 
         // Heuristic section
@@ -301,6 +312,7 @@ public class GUI extends Application
         playButton = new Button("▶");
         pauseButton = new Button("⏸");
         stopButton = new Button("⏹");
+        skipButton = new Button("⏭");
 
         // Set size and font for playback buttons
         playButton.setPrefWidth(60);
@@ -314,16 +326,22 @@ public class GUI extends Application
         stopButton.setPrefWidth(60);
         stopButton.setPrefHeight(40);
         stopButton.setFont(Font.font("Poly", 8));
+        
+        skipButton.setPrefWidth(60);
+        skipButton.setPrefHeight(40);
+        skipButton.setFont(Font.font("Poly", 8));
 
         playButton.setStyle(createButtonStyle(false));
         pauseButton.setStyle(createButtonStyle(false));
         stopButton.setStyle(createButtonStyle(false));
+        skipButton.setStyle(createButtonStyle(false));
 
         playButton.setDisable(true);
         pauseButton.setDisable(true);
         stopButton.setDisable(true);
+        skipButton.setDisable(true);
 
-        playbackControls.getChildren().addAll(playButton, pauseButton, stopButton);
+        playbackControls.getChildren().addAll(playButton, pauseButton, stopButton, skipButton);
 
         // Save buttons section with larger buttons
         HBox saveControls = new HBox(15);
@@ -451,14 +469,14 @@ private void setupResultsView()
     // Use a VBox with explicit spacing for the entire content layout
     VBox contentLayout = new VBox();
     contentLayout.setAlignment(Pos.TOP_CENTER);
-    contentLayout.setSpacing(20); // Good spacing between major sections
+    contentLayout.setSpacing(30); // Good spacing between major sections
     
     // 1. Title section
     Label resultsLabel = new Label("~ Results ~");
     resultsLabel.setFont(Font.font("Poly", 24));
     resultsLabel.setAlignment(Pos.CENTER);
 
-    VBox.setMargin(resultsLabel, new Insets(0, 0, 10, 0));
+    VBox.setMargin(resultsLabel, new Insets(0, 0, 30, 0));
     
     try
     {
@@ -467,8 +485,8 @@ private void setupResultsView()
         boardContainer.setAlignment(Pos.CENTER);
         
         // Your adaptive cell size calculation
-        int maxWidth = 400;
-        int maxHeight = 400;
+        int maxWidth = 500;
+        int maxHeight = 380;
         int cellWidthBased = (maxWidth - 20) / board.getCols();
         int cellHeightBased = (maxHeight - 20) / board.getRows();
         int cellSize = Math.min(cellWidthBased, cellHeightBased);
@@ -486,6 +504,9 @@ private void setupResultsView()
         boardPane.setPrefSize(boardWidth, boardHeight);
         boardContainer.getChildren().add(boardPane);
         
+        // Add spacing
+        VBox.setMargin(boardContainer, new Insets(0, 0, 20, 0));
+
         // 5. Stats container
         VBox statsContainer = new VBox(10); // 10px spacing between stat items
         statsContainer.setAlignment(Pos.CENTER);
@@ -497,7 +518,7 @@ private void setupResultsView()
         stepCountText.setFont(Font.font("Poly", 18));
         
         Label outLabel = new Label("Nodes Explored: " + nodesExplored + "    |    Searching Time: " + searchTime + " ms");
-        outLabel.setFont(Font.font("Poly", 14));
+        outLabel.setFont(Font.font("Poly", 16));
         
         statsContainer.getChildren().addAll(stepCountText, outLabel);
         
@@ -516,6 +537,7 @@ private void setupResultsView()
         playButton.setDisable(false);
         pauseButton.setDisable(true);
         stopButton.setDisable(false);
+        skipButton.setDisable(false);
         saveTxtButton.setDisable(false);
     } 
     catch (Exception e) 
@@ -574,6 +596,7 @@ private void setupResultsView()
         aStarButton.setOnAction(e -> handleAlgorithmSelection("A*"));
         gbfsButton.setOnAction(e -> handleAlgorithmSelection("GBFS"));
         ucsButton.setOnAction(e -> handleAlgorithmSelection("UCS"));
+        fringeButton.setOnAction(e -> handleAlgorithmSelection("Fringe"));
         
         // Heuristic button handlers
         distanceButton.setOnAction(e -> handleHeuristicSelection("Manhattan"));
@@ -586,6 +609,7 @@ private void setupResultsView()
         playButton.setOnAction(e -> handlePlayButtonClick());
         pauseButton.setOnAction(e -> handlePauseButtonClick());
         stopButton.setOnAction(e -> handleStopButtonClick());
+        skipButton.setOnAction(e -> handleSkipButtonClick());
         
         // Save button handlers
         saveTxtButton.setOnAction(e -> handleSaveTxtClick());
@@ -656,6 +680,7 @@ private void setupResultsView()
         aStarButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
         
         switch (algorithm) 
         {
@@ -667,6 +692,9 @@ private void setupResultsView()
                 break;
             case "UCS":
                 ucsButton.setStyle(createButtonStyle(true));
+                break;
+            case "Fringe":
+                fringeButton.setStyle(createButtonStyle(true));
                 break;
         }
         
@@ -822,6 +850,10 @@ private void setupResultsView()
                             algorithm = new UCS(board);
                             solutionMoves = algorithm.solve("none");
                             break;
+                        case "Fringe":
+                            algorithm = new Fringe(board);
+                            solutionMoves = algorithm.solve(selectedHeuristic);
+                            break;
                     }
                     
                     if (algorithm != null) 
@@ -867,6 +899,7 @@ private void setupResultsView()
 
                 playButton.setDisable(false);
                 stopButton.setDisable(false);
+                skipButton.setDisable(false);
                 speedSlider.setDisable(false);
                 saveTxtButton.setDisable(false);
             } 
@@ -919,6 +952,7 @@ private void setupResultsView()
             playButton.setDisable(true);
             pauseButton.setDisable(false);
             stopButton.setDisable(false);
+            skipButton.setDisable(false);
             
             // Disable speed slider during playback
             speedSlider.setDisable(true);
@@ -940,6 +974,7 @@ private void setupResultsView()
             playButton.setDisable(false);
             pauseButton.setDisable(true);
             stopButton.setDisable(false);
+            skipButton.setDisable(false);
             
             // Enable speed slider when paused
             speedSlider.setDisable(false);
@@ -961,9 +996,45 @@ private void setupResultsView()
             playButton.setDisable(false);
             pauseButton.setDisable(true);
             stopButton.setDisable(false);
+            skipButton.setDisable(false);
             
             speedSlider.setDisable(false);
             animation.drawBoard(board, boardPane);
+        }
+    }
+    
+    /**
+     * Handle the Skip button click event.
+     */
+    private void handleSkipButtonClick() 
+    {
+        if (animation != null && moves != null && !moves.isEmpty()) 
+        {
+            // Stop any current animation
+            animation.stop();
+            isPlaying = false;
+            isPaused = false;
+            
+            // Create the final board state by applying all moves
+            Board finalBoard = board.copy();
+            for (int[] move : moves) 
+            {
+                finalBoard = finalBoard.applyMove(move[0], move[1]);
+            }
+            
+            // Update the step count to the final step
+            currentStep = totalSteps;
+            stepCountText.setText("Move: " + currentStep + " / " + totalSteps);
+            
+            // Draw the final board state
+            animation.drawBoard(finalBoard, boardPane);
+            
+            // Update button states
+            playButton.setDisable(true);
+            pauseButton.setDisable(true);
+            stopButton.setDisable(false);
+            skipButton.setDisable(true);
+            speedSlider.setDisable(false);
         }
     }
     
@@ -1088,6 +1159,7 @@ private void setupResultsView()
         aStarButton.setStyle(createButtonStyle(false));
         gbfsButton.setStyle(createButtonStyle(false));
         ucsButton.setStyle(createButtonStyle(false));
+        fringeButton.setStyle(createButtonStyle(false));
         
         selectedHeuristic = "";
         distanceButton.setStyle(createButtonStyle(false));
@@ -1127,6 +1199,7 @@ private void setupResultsView()
         playButton.setDisable(true);
         pauseButton.setDisable(true);
         stopButton.setDisable(true);
+        skipButton.setDisable(true);
         speedSlider.setDisable(true);
         saveTxtButton.setDisable(true);
     }
@@ -1139,6 +1212,7 @@ private void setupResultsView()
         aStarButton.setDisable(false);
         gbfsButton.setDisable(false);
         ucsButton.setDisable(false);
+        fringeButton.setDisable(false);
     }
 
     /**

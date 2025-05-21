@@ -57,13 +57,15 @@ public class Fringe extends Algorithm
                 }
                 
                 incrementNodesExplored();
-                
+
                 if (curBoard.isSolved())
                 {
                     endTiming(startTime);
+
+                    // if (curMoves.size() < 100) return splitMovesToSteps(curMoves);
                     return curMoves;
                 }
-
+            
                 int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
                 if (curMoves.size() > maxCost) continue;
 
@@ -144,13 +146,15 @@ public class Fringe extends Algorithm
                 }
                 
                 incrementNodesExplored();
-                
+
                 if (curBoard.isSolved())
                 {
                     endTiming(startTime);
-                    return splitMovesToSteps(curMoves);
-                }
 
+                    // if (curMoves.size() < 100) return splitMovesToSteps(curMoves);
+                    return curMoves;
+                }
+            
                 int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
                 if (curMoves.size() > maxCost) continue;
 

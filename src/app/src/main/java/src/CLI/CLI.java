@@ -131,6 +131,7 @@ public class CLI
                         heuristic = "none";
                         algorithm = new UCS(board);
                         break;
+                        
                     case "Fringe":
                         heuristic = validateOption(scanner, 2);
                         algorithm = new Fringe(board);
