@@ -571,4 +571,25 @@ public class Animation {
     public boolean isPaused() {
         return isPaused;
     }
+
+    /**
+     * Update the step count display
+     * 
+     * @param step The step to display
+     */
+    public void updateStepCount(int step) {
+        if (stepCountText != null) {
+            stepCountText.setText("Move: " + step + " / " + totalSteps);
+        }
+    }
+
+    /**
+     * Set the current step
+     * 
+     * @param step The step to set
+     */
+    public void setCurrentStep(int step) {
+        this.currentStep = step;
+        updateStepCount();
+    }
 }
