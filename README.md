@@ -6,7 +6,7 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
 <!-- CONTRIBUTOR -->
  <div align="center" id="contributor">
    <strong>
-     <h3> Acep Villagers 🏚 </h3>
+     <h3> Contributors </h3>
      <table align="center">
        <tr align="center">
          <td>NIM</td>
@@ -41,33 +41,75 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
 
 ---
 
-### 🔎 Preview
+### Preview
+
+<div align="center">
+
+<img src="https://github.com/user-attachments/assets/5f1c493b-01df-46de-b841-fc4fd50e4956" width="100%" alt="cover">
+
+</div>
 
 <br>
 
 ---
 
-### ✨ Features
+### Description
+
+Finding your Rush Hour Puzzle solution by using pathfinding algorithms, including:
+
+- **Uniform Cost Search (UCS)**: Uninformed search algorithm designed to find the least-cost path $g(n)$ in a weighted graph
+- **Greedy Best First Search (GBFS)**: Informed search algorithm that selects the path to expand based on a heuristic evaluation $h(n)$ of the current state’s desirability in terms of reaching the goal.
+- **A\* (A Star)**: Combination of UCS and GBFS and utilizes both $g(n)$ and $h(n)$ into it's evalution function $f(n)$, more robust algorithm.
+- **Fringe Search**: Alternative to the A* algorithm that is more efficient in terms of memory usage, combines the concept of A* with _iterative deepening_ to control node expansion.
+
+All informed search implemented by two heuristics:
+
+- **Manhattan Distance**: The minimum number of moves based on the sum of horizontal and vertical distances the primary car must travel to reach the exit.
+- **Blocking Cars**: Counts how many other vehicles are in the way of the primary car’s path to the exit.
+
+The program is developed using Java and JavaFX, featuring an animated user interface (GUI) that makes it easy for users to visualize the solution’s movement path.
+
+### Input Format
+
+To succesfully load a `.txt` file, the format of the `.txt` should follow this layout:
+
+```txt
+# A B                 (Rows and Columns of the actual puzzle grid)
+# N                   (Numbers of Car without the primary car)
+# Grid Configuration
+
+# Sample:
+
+6 6
+11
+GBB.L.
+GHI.LM
+GHIPPMK
+CCCZ.M
+..JZDD
+EEJFF.
+```
+> [!IMPORTANT]
+> Exit door always using the letter "K" and Primary car using the letter "P" 
+
+---
+
+### Features
 
 ### *This project contains:*
 
 - **Main Program as Puzzle Solver with various _pathfinding_ and _heuristics_ approaches**
-- **`[Bonus]` Image Preview of the Solutions**
+- **`[Bonus]` Animation Preview of the Solutions**
 - **`[Bonus]` GUI with including Available Test Cases, Outputs, File & Result Preview**
-
-### *Space for Improvement:*
-
-- **Lorem Ipsum**
 
 ### *Take a peek:*
 
 - **The core logic is located at `~/src/app/src/main/java/src/`**
-- **There is an additional `GUI` folder for the GUI program**
 - **Create Pull Request and Collaborate for project improvement**
 
 ---
 
-### ️📦 Running Locally
+### ️Running Locally
 
 > [!NOTE]  
 > Before you start, install these dependencies first with links given :D
@@ -76,7 +118,7 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
 > - [**Gradle**](Gradle-url) - 8.12 or later *(if using build)*
 > - [**JavaFX**](JavaFX-url) - 23 *(if using build)*
 
-### 🔧 Initialization
+### Initialization
 
 - **Clone the repository**
 
@@ -84,7 +126,7 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
   git clone https://github.com/zirachw/Tucil3_13523004_13523098
   ```
   
-### 💻 Command-Line Interface (CLI) Mode
+### Command-Line Interface (CLI) Mode
 
 - Run the following command to start the application in `CLI` mode:
 
@@ -99,7 +141,7 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
    ./gradlew run --quiet --warning-mode=none --console=plain --args="-cli"
    ```
 
-### 🖼 Graphical User Interface (GUI) Mode
+### Graphical User Interface (GUI) Mode
 
 - Run the following command to start the application in `GUI` mode:
 
@@ -113,16 +155,38 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
    cd src
    ./gradlew run --quiet --warning-mode=none --console=plain --args="-gui"
    ```
-   
+
+> [!TIP]  
+>
+> Or just double-click it as usual executables :D
+
+### ️Build Locally
+
+- **Clone the repository**
+
+  ```
+  git clone https://github.com/zirachw/Tucil3_13523004_13523098
+  ```
+
+- Run the following command to start the build:
+
+  ```bash
+   cd bin/src
+   ./gradlew clean
+   /gradlew build
+   ```
+  
 <br>
 
 > [!IMPORTANT]  
 >
+> The `app.jar` will be in `~/src/app/bin/libs/app.jar`, you may move it to `~/bin/src` to use the same run command:
+> 
 > Build using `Gradle` requires you to install additional dependencies.
 
 ---
 
-### 🔧 Project Structure
+### Project Structure
 
 <br> 
 
@@ -176,7 +240,7 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
 ```
 
 ---
-### 📃 Miscellaneous
+### Miscellaneous
 
 <br>
 
@@ -184,14 +248,14 @@ An interactive CLI and GUI program in Java, implements various _Pathfinding_ alg
  
 | No | Specification | Yes | No |
 | --- | --- | --- | --- |
-| 1 | Program compiled successfully without errors | | |
-| 2 | The program runs successfully | | |
-| 3 | The solution provided by the program is correct and complies with the rules of the game | | |
-| 4 | The program can read the input .txt file and save the solution in the form of a print board step by step in the .txt file | | |
-| 5 | **[Bonus]** Implementation of alternative pathfinding algorithms | | |
-| 6 | **[Bonus]** Implementation of 2 or more alternative heuristics | | |
-| 7 | **[Bonus]** Program has GUI | | |
-| 6 | Program and report made by (group) itself | | |
+| 1 | Program compiled successfully without errors | ✔️ | |
+| 2 | The program runs successfully | ✔️ | |
+| 3 | The solution provided by the program is correct and complies with the rules of the game | ✔️ | |
+| 4 | The program can read the input .txt file and save the solution in the form of a print board step by step in the .txt file | ✔️ | |
+| 5 | **[Bonus]** Implementation of alternative pathfinding algorithms | ✔️ | |
+| 6 | **[Bonus]** Implementation of 2 or more alternative heuristics | ✔️ | |
+| 7 | **[Bonus]** Program has GUI | ✔️ | |
+| 6 | Program and report made by (group) itself | ✔️ | |
 
 </div>
 
