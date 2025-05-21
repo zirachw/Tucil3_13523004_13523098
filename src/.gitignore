@@ -8,11 +8,4 @@
 .idea
 
 app/build/*
-app/build/generated/
-app/build/resources/
-app/build/scripts/
-app/build/tmp/
-app/build/test-results/
-app/build/reports/
-app/build/distributions/
-app/build/libs/
+app/bin/*
