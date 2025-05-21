@@ -298,8 +298,7 @@ public class Input
             {
                 if (this.boardConfig.get(this.boardConfig.size() - 1).matches("^\\s*K\\s*$"))
                 {
-                    if (this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K') == 0 ||
-                        this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K') > this.getCols()) 
+                    if (this.boardConfig.get(this.boardConfig.size() - 1).indexOf('K') > this.getCols()) 
                     {
                         this.errorMsg = "Exit (K) cannot be in Corner or exceeds further.";
                         return;
