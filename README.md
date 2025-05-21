@@ -158,7 +158,7 @@ EEJFF.
 
 > [!TIP]  
 >
-> Or just double-click it as usual executables :D
+> Or just double-click the `app.jar` as usual executables :D
 
 ### ️Build Locally
 
