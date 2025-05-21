@@ -26,6 +26,8 @@ public class GBFS extends Algorithm
         List<int[]> initialMoves = new ArrayList<>();
         
         int initialHValue = State.calculateBlockingCarHeuristic(initialBoard);
+        
+        addToVisited(initialBoard);
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
         while (!queue.isEmpty())
@@ -36,14 +38,15 @@ public class GBFS extends Algorithm
             List<int[]> curMoves = curState.getMoves();
             incrementNodesExplored();
 
-            if (curBoard.isSolved()) 
+            if (curBoard.isSolved())
             {
                 endTiming(startTime);
-                return splitMovesToSteps(curMoves);
+                return curMoves;
             }
-
-            if (hasBeenVisited(curBoard)) continue;
-            addToVisited(curBoard);
+            
+            // Add a maximum cost limit like in A*
+            int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
+            if (curMoves.size() > maxCost) continue;
             
             for (int i = 0; i < cars.size(); i++)
             {
@@ -55,6 +58,8 @@ public class GBFS extends Algorithm
                     
                     if (!hasBeenVisited(newBoard))
                     {
+                        addToVisited(newBoard);
+                        
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         
@@ -77,6 +82,8 @@ public class GBFS extends Algorithm
         List<int[]> initialMoves = new ArrayList<>();
         
         int initialHValue = State.calculateManhattanDistanceHeuristic(initialBoard);
+        
+        addToVisited(initialBoard);
         queue.add(new State(initialBoard, initialMoves, initialHValue));
         
         while (!queue.isEmpty())
@@ -87,14 +94,15 @@ public class GBFS extends Algorithm
             List<int[]> curMoves = curState.getMoves();
             incrementNodesExplored();
 
-            if (curBoard.isSolved()) 
+            if (curBoard.isSolved())
             {
                 endTiming(startTime);
                 return curMoves;
             }
-
-            if(hasBeenVisited(curBoard)) continue;
-            addToVisited(curBoard);
+            
+            // Add a maximum cost limit like in A*
+            int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
+            if (curMoves.size() > maxCost) continue;
             
             for (int i = 0; i < cars.size(); i++)
             {
@@ -106,6 +114,8 @@ public class GBFS extends Algorithm
                     
                     if (!hasBeenVisited(newBoard))
                     {
+                        addToVisited(newBoard);
+                        
                         List<int[]> newMoves = new ArrayList<>(curMoves);
                         newMoves.add(new int[]{i, moveAmount});
                         

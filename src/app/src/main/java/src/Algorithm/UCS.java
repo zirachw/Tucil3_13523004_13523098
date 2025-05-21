@@ -35,12 +35,14 @@ public class UCS extends Algorithm
             List<int[]> curMoves = curState.getMoves();
             incrementNodesExplored();
 
-            if (curBoard.isSolved()) 
+            if (curBoard.isSolved())
             {
                 endTiming(startTime);
-                return splitMovesToSteps(curMoves);
-            }
 
+                // if (curMoves.size() < 100) return splitMovesToSteps(curMoves);
+                return curMoves;
+            }
+            
             if (hasBeenVisited(curBoard)) continue;
             addToVisited(curBoard);
             

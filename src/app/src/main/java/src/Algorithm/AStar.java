@@ -43,7 +43,7 @@ public class AStar extends Algorithm
                 endTiming(startTime);
                 return curMoves;
             }
-
+            
             // Set maximum cost limit
             int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
             if (curMoves.size() > maxCost) continue;
@@ -98,7 +98,7 @@ public class AStar extends Algorithm
             if (curBoard.isSolved())
             {
                 endTiming(startTime);
-                return splitMovesToSteps(curMoves);
+                return curMoves;
             }
 
             int maxCost = curBoard.getRows() * curBoard.getCols() * 50;
