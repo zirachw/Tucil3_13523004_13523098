@@ -2,10 +2,8 @@ package src.ADT;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Class representing the game board for the Rush Hour puzzle.
@@ -81,75 +79,6 @@ public class Board {
     public String[] getPalette() { return this.palette; }
     public Integer getCurrentMovedCarIndex() { return this.currentMovedCarIndex; }
     public void setCurrentMovedCarIndex(Integer index) { this.currentMovedCarIndex = index; }
-
-    /**
-     * Creates a deep copy of the current board state
-     * 
-     * @return A new Board object with the same state
-     */
-    public Board copy() 
-    {
-        Board newBoard = new Board(this.getRows(), 
-                                   this.getCols(), 
-                                   this.getNumCars(), 
-                                   this.getExitRow(), 
-                                   this.getExitCol(),
-                                   this.getExitSide(),
-                                   this.getErrorMsg());
-        
-        // Copy the grid
-        for (int i = 0; i < this.getRows(); i++) 
-            System.arraycopy(this.grid[i], 0, newBoard.grid[i], 0, this.getCols());
-        
-        // Copy the cars
-        for (Car car : this.getCars()) 
-        {
-            Car newCar = car.copy();
-            newBoard.cars.add(newCar);
-        }
-        
-        newBoard.exitRow  = this.getExitRow();
-        newBoard.exitCol  = this.getExitCol();
-        newBoard.errorMsg = this.getErrorMsg();
-        newBoard.currentMovedCarIndex = this.currentMovedCarIndex;
-        
-        return newBoard;
-    }
-    
-    /**
-     * Check if the board is in a solved state (primary car at exit)
-     * 
-     * @return True if solved, false otherwise
-     */
-    public boolean isSolved() 
-    {
-        Car primaryCar = getPrimaryCar();
-        if (primaryCar == null) return false;
-        
-        int startRow = primaryCar.getStartRow();
-        int startCol = primaryCar.getStartCol();
-        int endRow = startRow + (primaryCar.getOrientation() == VERTICAL ? primaryCar.getLength() - 1 : 0);
-        int endCol = startCol + (primaryCar.getOrientation() == HORIZONTAL ? primaryCar.getLength() - 1 : 0);
-        
-        if (primaryCar.getOrientation() == HORIZONTAL) 
-        {
-            if (exitCol == this.getCols() - 1)
-                return (endCol == this.getCols() - 1) && (startRow == exitRow);
-            
-            else if (exitCol == 0)
-                return (startCol == 0) && (startRow == exitRow);
-        } 
-        else 
-        {
-            if (exitRow == this.getRows()-1)
-                return (endRow == this.getRows()-1) && (startCol == exitCol);
-            
-            else if (exitRow == 0)
-                return (startRow == 0) && (startCol == exitCol);
-        }
-        
-        return false;
-    }
     
     /**
      * Get all valid moves for a specific car
@@ -284,7 +213,76 @@ public class Board {
         
         return newBoard;
     }
-    
+
+        /**
+     * Check if the board is in a solved state (primary car at exit)
+     * 
+     * @return True if solved, false otherwise
+     */
+    public boolean isSolved() 
+    {
+        Car primaryCar = getPrimaryCar();
+        if (primaryCar == null) return false;
+        
+        int startRow = primaryCar.getStartRow();
+        int startCol = primaryCar.getStartCol();
+        int endRow = startRow + (primaryCar.getOrientation() == VERTICAL ? primaryCar.getLength() - 1 : 0);
+        int endCol = startCol + (primaryCar.getOrientation() == HORIZONTAL ? primaryCar.getLength() - 1 : 0);
+        
+        if (primaryCar.getOrientation() == HORIZONTAL) 
+        {
+            if (exitCol == this.getCols() - 1)
+                return (endCol == this.getCols() - 1) && (startRow == exitRow);
+            
+            else if (exitCol == 0)
+                return (startCol == 0) && (startRow == exitRow);
+        } 
+        else 
+        {
+            if (exitRow == this.getRows()-1)
+                return (endRow == this.getRows()-1) && (startCol == exitCol);
+            
+            else if (exitRow == 0)
+                return (startRow == 0) && (startCol == exitCol);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Creates a deep copy of the current board state
+     * 
+     * @return A new Board object with the same state
+     */
+    public Board copy() 
+    {
+        Board newBoard = new Board(this.getRows(), 
+                                   this.getCols(), 
+                                   this.getNumCars(), 
+                                   this.getExitRow(), 
+                                   this.getExitCol(),
+                                   this.getExitSide(),
+                                   this.getErrorMsg());
+        
+        // Copy the grid
+        for (int i = 0; i < this.getRows(); i++) 
+            System.arraycopy(this.grid[i], 0, newBoard.grid[i], 0, this.getCols());
+        
+        // Copy the cars
+        for (Car car : this.getCars()) 
+        {
+            Car newCar = car.copy();
+            newBoard.cars.add(newCar);
+        }
+        
+        newBoard.exitRow  = this.getExitRow();
+        newBoard.exitCol  = this.getExitCol();
+        newBoard.errorMsg = this.getErrorMsg();
+        newBoard.currentMovedCarIndex = this.currentMovedCarIndex;
+        
+        return newBoard;
+    }
+
     /**
      * Load a board configuration from a 2D character array
      * 
