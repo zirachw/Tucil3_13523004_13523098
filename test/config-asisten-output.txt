@@ -1,0 +1,53 @@
+Nodes Explored: 209
+Searching Time: 57 ms
+
+Initial board state:
+AAB..F
+..BCDF
+GPPCDFK
+GH.III
+GHJ...
+LLJMM.
+
+Solution:
+
+Move piece C 1 spaces Up
+AABC.F
+..BCDF
+GPP.DFK
+GH.III
+GHJ...
+LLJMM.
+
+Move piece I 1 spaces Left
+AABC.F
+..BCDF
+GPP.DFK
+GHIII.
+GHJ...
+LLJMM.
+
+Move piece F 3 spaces Down
+AABC..
+..BCD.
+GPP.D.K
+GHIIIF
+GHJ..F
+LLJMMF
+
+Move piece D 1 spaces Up
+AABCD.
+..BCD.
+GPP...K
+GHIIIF
+GHJ..F
+LLJMMF
+
+Move piece P 3 spaces Right
+AABCD.
+..BCD.
+G...PPK
+GHIIIF
+GHJ..F
+LLJMMF
+
