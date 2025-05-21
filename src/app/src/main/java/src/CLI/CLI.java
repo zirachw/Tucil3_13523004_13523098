@@ -13,7 +13,6 @@ import src.Algorithm.Algorithm;
 import src.Algorithm.Fringe;
 import src.IO.Input;
 import src.IO.Output;
-import src.ADT.Car;
 
 /**
  * CLI class to run the command line interface application.
@@ -107,7 +106,11 @@ public class CLI
 
                 System.out.println("[#] Puzzle loaded successfully!");
                 System.out.println("[#] Puzzle configuration:");
-                displayBoardInfo(board, input);
+                System.out.println();
+                System.out.println("Board size: " + input.getRows() + " x " + input.getCols());
+                System.out.println("Number of Cars: " + (board.getCars().size()));
+                System.out.println("\nInitial board state:");
+                System.out.println(board.toString());
                 System.out.println();
                 
                 String algoChoice = validateOption(scanner, 4);
@@ -271,47 +274,5 @@ public class CLI
             }
         }
         return algo;
-    }
-    
-    /**
-     * Displays information about the board and puzzle
-     * 
-     * @param board The board object
-     * @param input The input object
-     */
-    private static void displayBoardInfo(Board board, Input input) 
-    {
-        System.out.println("\n" + "=".repeat(40));
-        System.out.println("PUZZLE INFORMATION");
-        System.out.println("=".repeat(40));
-        System.out.println("Board size: " + input.getRows() + " x " + input.getCols());
-        System.out.println("Number of Cars: " + (board.getCars().size()));
-        System.out.println("Primary car: " + (board.getPrimaryCar() != null ? board.getPrimaryCar().getId() : "Not found"));
-        System.out.println("Exit position: " + board.getExitRow() + ", " + board.getExitCol());
-        
-        System.out.println("Exit row: " + board.getExitRow());
-        System.out.println("Exit column: " + board.getExitCol());
-        
-        System.out.println("\nInitial board state:");
-        System.out.println(board.toString());
-        
-        // Check if already solved
-        if (board.isSolved()) 
-        {
-            System.out.println("\n✓ Puzzle is already solved!");
-            return;
-        }
-        
-        System.out.println("\nCars on the board:");
-        for (int i = 0; i < board.getCars().size(); i++) 
-        {
-            Car car = board.getCars().get(i);
-            System.out.printf("  %d. %c - %s, size %d, at (%d,%d)%s\n", 
-                i + 1, car.getId(),
-                car.getOrientation()  == 1 ? "Horizontal" : "Vertical",
-                car.getLength(),
-                car.getStartRow(), car.getStartCol(),
-                car.isPrimary() ? " [PRIMARY]" : "");
-        }
     }
 }
